@@ -1,4 +1,4 @@
-import { createProjectSchema } from "../domain/create-project-schema";
+import { createProjectSchema } from "../../categories/domain/create-project-schema";
 import {
   createProjectWithHistory,
   findProjectByName,

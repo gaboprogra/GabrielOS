@@ -38,6 +38,12 @@ export default function Home() {
           >
             Administrar proyectos
           </Link>
+          <Link
+            href="/tasks"
+            className="inline-flex rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+          >
+            Abrir banco de tareas
+          </Link>
         </section>
       </article>
     </main>

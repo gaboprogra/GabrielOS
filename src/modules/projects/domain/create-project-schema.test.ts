@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createProjectSchema } from "./create-project-schema";
+import { createProjectSchema } from "../../categories/domain/create-project-schema";
 
 describe("createProjectSchema", () => {
   it("acepta un proyecto válido", () => {

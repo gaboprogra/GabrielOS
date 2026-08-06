@@ -75,3 +75,18 @@ export async function listProjects(userId: string) {
     },
   });
 }
+export async function listActiveProjectOptions(userId: string) {
+  return prisma.project.findMany({
+    where: {
+      userId,
+      status: "ACTIVE",
+    },
+    orderBy: {
+      name: "asc",
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+}
