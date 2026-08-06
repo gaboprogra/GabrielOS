@@ -9,8 +9,9 @@ La aplicación debe reemplazar progresivamente un prototipo construido con
 Google Sheets, Google Apps Script y Google Calendar.
 
 La visión y la arquitectura versión 1.0 fueron aprobadas por Gabriel el
-2026-08-06. La fase de arquitectura está cerrada y el trabajo posterior debe
-respetar la documentación aprobada.
+2026-08-06. La fase de arquitectura está cerrada, la implementación del MVP
+está habilitada y el trabajo posterior debe respetar la documentación
+aprobada.
 
 Antes de trabajar, revisar:
 
@@ -72,6 +73,9 @@ Después de escribir código:
 
 ## Dependencias
 
+Se permite instalar los frameworks y las dependencias aprobadas en
+`docs/architecture.md` cuando una tarea de implementación los requiera.
+
 Antes de instalar una dependencia nueva:
 
 1. Explicar qué problema resuelve.
@@ -117,9 +121,21 @@ Una tarea se considera terminada cuando:
 
 - Implementar el MVP de forma incremental; no generar la aplicación completa
   en una sola tarea.
+- Cada bloque implementado debe pasar lint, typecheck, pruebas y build antes de
+  considerarse terminado.
 - No crear funcionalidades posteriores al MVP sin autorización.
 - No implementar sincronización bidireccional con Google Calendar durante el
   MVP.
 - No implementar multiusuario completo durante el MVP.
 - No introducir microservicios durante el MVP.
 - Toda modificación sustancial de la arquitectura aprobada requiere un ADR.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

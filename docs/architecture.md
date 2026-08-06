@@ -32,6 +32,8 @@ La decisión central está registrada en el ADR 0001.
 
 - TypeScript estricto.
 - Next.js y React.
+- Tailwind CSS como solución inicial de estilos del frontend, sin incorporar
+  una biblioteca externa de componentes visuales.
 - PostgreSQL.
 - Prisma para acceso a datos desde infraestructura o repositorios.
 - Zod para validación en límites de entrada.

@@ -7,63 +7,72 @@ automatizaciones.
 ## Estado del proyecto
 
 La visión y la arquitectura versión 1.0 fueron aprobadas por Gabriel el
-2026-08-06. La fase de arquitectura está cerrada y el proyecto puede avanzar a
-la implementación incremental del MVP.
+2026-08-06. La fase de implementación incremental del MVP está habilitada.
 
-Todavía no existe una aplicación de producción en este repositorio. La primera
-versión funcional fue probada utilizando:
+La base ejecutable utiliza Next.js, React, TypeScript estricto y Tailwind CSS.
+El primer bloque implementado es el dominio mínimo de tareas, con la regla pura
+que determina si una tarea está atrasada. Todavía no se implementaron CRUD,
+autenticación, persistencia ni integraciones externas.
 
-- Google Sheets.
-- Google Apps Script.
-- Google Calendar.
-- Automatización de tareas y eventos.
-- Historial de actividades.
+## Requisitos
 
-La nueva versión será una aplicación web construida a partir de lo aprendido
-con ese prototipo.
+- Node.js 20.9 o superior. El entorno inicial fue verificado con Node.js
+  22.17.0.
+- pnpm 10.32.1, fijado mediante `packageManager` en `package.json`.
 
-## Objetivo principal
+## Instalación
 
-Crear un sistema personal que permita:
+```bash
+pnpm install
+```
 
-- Registrar y organizar tareas rápidamente.
-- Construir un plan diario y administrar rutinas.
-- Relacionar tareas con categorías y proyectos.
-- Sincronizar inicialmente el plan hacia Google Calendar.
-- Importar de forma controlada la información de Google Sheets.
-- Conservar un historial confiable.
-- Consultar el cumplimiento diario.
-- Incorporar automatización e inteligencia artificial después del MVP.
+La instalación no requiere secretos ni servicios externos en esta etapa.
+
+## Desarrollo
+
+Iniciar el servidor local:
+
+```bash
+pnpm dev
+```
+
+Después, abrir `http://localhost:3000`.
+
+## Comandos de calidad
+
+- `pnpm lint`: ejecuta ESLint.
+- `pnpm typecheck`: genera los tipos de rutas de Next.js y verifica TypeScript
+  sin emitir archivos.
+- `pnpm test`: ejecuta las pruebas unitarias una vez con Vitest.
+- `pnpm test:watch`: ejecuta Vitest en modo interactivo.
+- `pnpm build`: genera el build de producción.
+- `pnpm check`: ejecuta lint, typecheck, test y build, en ese orden.
+
+## Estructura inicial
+
+```text
+src/
+├── app/                         # App Router, portada y estilos globales
+├── modules/
+│   └── tasks/
+│       └── domain/              # Task, estados, reglas y pruebas unitarias
+└── shared/
+    └── domain/                  # Conceptos genéricos futuros, actualmente vacío
+```
+
+Solo se crean módulos cuando una funcionalidad comienza a implementarse.
 
 ## Alcance aprobado del MVP
 
-El MVP incluye:
+El MVP incluye autenticación para un usuario inicial, categorías, proyectos,
+banco de tareas, plan diario, rutinas básicas, historial, sincronización
+unidireccional con Google Calendar, importación desde Google Sheets y un panel
+básico de cumplimiento.
 
-1. Autenticación para un usuario inicial.
-2. Categorías y proyectos.
-3. Banco de tareas.
-4. Plan diario.
-5. Rutinas básicas.
-6. Historial inmutable.
-7. Sincronización unidireccional con Google Calendar.
-8. Importación desde Google Sheets.
-9. Panel básico de cumplimiento.
-
-Las estadísticas avanzadas, la planificación automática, el asistente con
-inteligencia artificial, la aplicación móvil nativa, el multiusuario completo,
-las integraciones adicionales y las automatizaciones complejas quedan para
-después del MVP. El detalle normativo se encuentra en `docs/scope.md`.
-
-## Principios del proyecto
-
-- Modularidad.
-- Simplicidad de uso.
-- Seguridad y propiedad de datos.
-- Trazabilidad e historial.
-- Pruebas automatizadas.
-- Documentación permanente.
-- Desarrollo incremental.
-- Evitar complejidad innecesaria.
+Las estadísticas avanzadas, planificación automática, inteligencia artificial,
+aplicación móvil nativa, multiusuario completo, integraciones adicionales y
+automatizaciones complejas quedan para después del MVP. El detalle normativo
+está en `docs/scope.md`.
 
 ## Documentación
 
@@ -75,7 +84,3 @@ después del MVP. El detalle normativo se encuentra en `docs/scope.md`.
 - Requisitos no funcionales: `docs/non-functional-requirements.md`.
 - Decisiones técnicas: `docs/decisions/`.
 - Reglas para agentes: `AGENTS.md`.
-
-## Estado
-
-🚧 Arquitectura aprobada; implementación del MVP pendiente.
