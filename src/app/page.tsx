@@ -1,3 +1,4 @@
+import Link from "next/link";
 export default function Home() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12 sm:px-10">
@@ -22,9 +23,15 @@ export default function Home() {
             Primer módulo: Tareas
           </h2>
           <p className="mt-3 leading-7 text-slate-300">
-            La primera regla de dominio ya permite identificar tareas
-            atrasadas de forma determinista.
+            La primera regla de dominio ya permite identificar tareas atrasadas
+            de forma determinista.
           </p>
+          <Link
+            href="/categories"
+            className="mt-6 inline-flex rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+          >
+            Administrar categorías
+          </Link>
         </section>
       </article>
     </main>
