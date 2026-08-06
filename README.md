@@ -6,10 +6,12 @@ automatizaciones.
 
 ## Estado del proyecto
 
-Actualmente el proyecto se encuentra en fase de planificación y definición
-de arquitectura.
+La visión y la arquitectura versión 1.0 fueron aprobadas por Gabriel el
+2026-08-06. La fase de arquitectura está cerrada y el proyecto puede avanzar a
+la implementación incremental del MVP.
 
-La primera versión funcional fue probada utilizando:
+Todavía no existe una aplicación de producción en este repositorio. La primera
+versión funcional fue probada utilizando:
 
 - Google Sheets.
 - Google Apps Script.
@@ -24,36 +26,40 @@ con ese prototipo.
 
 Crear un sistema personal que permita:
 
-- Registrar tareas rápidamente.
-- Organizar tareas por categorías y proyectos.
-- Construir un plan diario.
-- Administrar rutinas.
-- Sincronizar actividades con Google Calendar.
-- Registrar el historial de trabajo.
-- Analizar productividad y cumplimiento.
-- Automatizar recordatorios y planificación.
-- Incorporar inteligencia artificial progresivamente.
+- Registrar y organizar tareas rápidamente.
+- Construir un plan diario y administrar rutinas.
+- Relacionar tareas con categorías y proyectos.
+- Sincronizar inicialmente el plan hacia Google Calendar.
+- Importar de forma controlada la información de Google Sheets.
+- Conservar un historial confiable.
+- Consultar el cumplimiento diario.
+- Incorporar automatización e inteligencia artificial después del MVP.
 
-## Módulos previstos
+## Alcance aprobado del MVP
 
-1. Autenticación.
-2. Banco de tareas.
-3. Plan diario.
-4. Proyectos.
-5. Categorías.
-6. Rutinas.
-7. Calendario.
-8. Historial y bitácora.
-9. Estadísticas.
-10. Automatizaciones.
-11. Asistente inteligente.
+El MVP incluye:
+
+1. Autenticación para un usuario inicial.
+2. Categorías y proyectos.
+3. Banco de tareas.
+4. Plan diario.
+5. Rutinas básicas.
+6. Historial inmutable.
+7. Sincronización unidireccional con Google Calendar.
+8. Importación desde Google Sheets.
+9. Panel básico de cumplimiento.
+
+Las estadísticas avanzadas, la planificación automática, el asistente con
+inteligencia artificial, la aplicación móvil nativa, el multiusuario completo,
+las integraciones adicionales y las automatizaciones complejas quedan para
+después del MVP. El detalle normativo se encuentra en `docs/scope.md`.
 
 ## Principios del proyecto
 
 - Modularidad.
 - Simplicidad de uso.
-- Seguridad.
-- Trazabilidad.
+- Seguridad y propiedad de datos.
+- Trazabilidad e historial.
 - Pruebas automatizadas.
 - Documentación permanente.
 - Desarrollo incremental.
@@ -61,11 +67,15 @@ Crear un sistema personal que permita:
 
 ## Documentación
 
-- Visión del producto: `docs/vision.md`
-- Arquitectura: `docs/architecture.md`
-- Decisiones técnicas: `docs/decisions/`
-- Reglas para agentes: `AGENTS.md`
+- Visión aprobada: `docs/vision.md`.
+- Alcance del MVP: `docs/scope.md`.
+- Arquitectura aprobada: `docs/architecture.md`.
+- Modelo de dominio: `docs/domain-model.md`.
+- Estrategia de migración: `docs/migration-strategy.md`.
+- Requisitos no funcionales: `docs/non-functional-requirements.md`.
+- Decisiones técnicas: `docs/decisions/`.
+- Reglas para agentes: `AGENTS.md`.
 
 ## Estado
 
-🚧 En construcción.
+🚧 Arquitectura aprobada; implementación del MVP pendiente.

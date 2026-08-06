@@ -1,5 +1,12 @@
 # Visión de GabrielOS
 
+## Aprobación
+
+- Estado: Aprobada
+- Fecha de aprobación: 2026-08-06
+- Responsable: Gabriel
+- Versión: 1.0
+
 ## Problema
 
 Actualmente la información personal de organización puede quedar dispersa
@@ -29,57 +36,61 @@ El sistema deberá ayudar al usuario a decidir:
 - Qué es prioritario.
 - Qué actividades están atrasadas.
 - Qué progreso tiene cada proyecto.
-- Cómo está utilizando su tiempo.
+- Cómo está cumpliendo su plan diario.
 
 ## Usuario inicial
 
-La primera versión está diseñada para un único usuario: Gabriel.
+La primera versión está diseñada para un único usuario: Gabriel. El MVP tendrá
+autenticación y podrá limitar el registro a una sola cuenta.
 
-La arquitectura deberá permitir incorporar más usuarios en el futuro, pero
-sin agregar complejidad multiusuario innecesaria durante el MVP.
+Las entidades principales tendrán propietario y la autorización se comprobará
+en el servidor. Esto permitirá incorporar más usuarios en el futuro sin
+implementar todavía la experiencia multiusuario completa.
 
 ## Propuesta de valor
 
-GabrielOS no será solamente una lista de tareas.
+GabrielOS no será solamente una lista de tareas. Integrará un banco de tareas,
+categorías, proyectos, plan diario, rutinas básicas, historial, calendario,
+importación del sistema anterior y una vista básica de cumplimiento.
 
-Integrará:
-
-- Tareas.
-- Agenda.
-- Rutinas.
-- Proyectos.
-- Historial.
-- Estadísticas.
-- Automatizaciones.
-- Asistencia inteligente.
+La planificación automática, las estadísticas avanzadas y la asistencia con
+inteligencia artificial ampliarán esta propuesta después de validar el MVP.
 
 ## MVP
 
 La primera versión web deberá permitir:
 
-1. Crear, editar y eliminar tareas.
-2. Clasificar tareas por categoría y proyecto.
-3. Asignar prioridad, duración y estado.
-4. Programar tareas para una fecha y hora.
-5. Construir el plan diario.
-6. Marcar actividades como completadas, omitidas o reprogramadas.
-7. Registrar automáticamente el historial.
-8. Consultar tareas pendientes.
-9. Visualizar el calendario.
-10. Sincronizar eventos con Google Calendar.
+1. Autenticar al usuario inicial y limitar el acceso a sus propios datos.
+2. Crear, editar, archivar y recuperar tareas del banco de tareas.
+3. Clasificar cada tarea con, como máximo, una categoría y un proyecto.
+4. Asignar prioridad, duración, estado y, opcionalmente, fecha límite.
+5. Programar tareas como elementos concretos del plan diario.
+6. Crear rutinas básicas que generen elementos del plan diario.
+7. Completar, omitir, cancelar o reprogramar elementos del plan.
+8. Registrar de forma inmutable las acciones relevantes en el historial.
+9. Sincronizar el plan de GabrielOS hacia Google Calendar sin aceptar cambios
+   en sentido inverso.
+10. Importar datos de Google Sheets mediante un proceso controlado y
+    reversible antes del corte definitivo.
+11. Mostrar un panel básico de cumplimiento diario.
 
-## Fuera del MVP
+El alcance normativo completo se define en `docs/scope.md` y los conceptos en
+`docs/domain-model.md`.
 
-No se implementará inicialmente:
+## Después del MVP
 
+No se implementarán inicialmente:
+
+- Estadísticas avanzadas.
+- Planificación automática.
+- Asistente con inteligencia artificial.
 - Aplicación móvil nativa.
-- Equipos empresariales.
+- Multiusuario completo.
+- Integraciones adicionales.
+- Sincronización bidireccional con calendarios.
+- Automatizaciones complejas.
 - Microservicios.
-- Marketplace.
-- Red social.
-- Integraciones con múltiples proveedores de calendario.
-- Inteligencia artificial autónoma con control completo.
-- Facturación o suscripciones.
+- Equipos empresariales, marketplace, red social, facturación o suscripciones.
 
 ## Principios de experiencia
 
@@ -88,14 +99,27 @@ No se implementará inicialmente:
 - La información importante debe verse sin demasiados clics.
 - El usuario debe conservar el control sobre las automatizaciones.
 - Toda acción automática importante debe poder revisarse.
-- El historial no debe perderse cuando una tarea sea reprogramada.
+- Reprogramar o archivar una tarea no debe destruir su historial.
+- Los errores de importación o sincronización deben ser visibles y
+  recuperables.
 
-## Indicadores iniciales de éxito
+## Criterios iniciales de éxito
 
-- Poder registrar una tarea en pocos pasos.
-- Construir el plan diario desde el banco de tareas.
-- Mantener sincronización confiable con el calendario.
-- Saber qué tareas fueron completadas cada día.
-- Poder recuperar el historial de una tarea.
-- Detectar tareas atrasadas.
-- Poder utilizar el sistema diariamente sin depender de la hoja original.
+- Crear una tarea básica en no más de tres acciones después de abrir el
+  formulario de captura.
+- Incorporar una tarea existente al plan diario sin duplicarla.
+- Repetir una operación de sincronización sin crear eventos duplicados.
+- Consultar qué elementos fueron completados, omitidos o cancelados en una
+  fecha determinada.
+- Recuperar una tarea archivada junto con su historial previo.
+- Identificar como atrasadas las tareas o actividades que cumplan la regla del
+  modelo de dominio.
+- Previsualizar una importación y obtener errores por fila antes de escribir
+  datos.
+- Consultar en el panel básico la proporción diaria entre elementos
+  completados y elementos cerrados como completados, omitidos o cancelados.
+- Completar el punto de corte y utilizar GabrielOS diariamente sin depender de
+  la hoja original para nuevas operaciones.
+
+Los objetivos técnicos verificables se detallan en
+`docs/non-functional-requirements.md`.

@@ -8,11 +8,19 @@ y automatización.
 La aplicación debe reemplazar progresivamente un prototipo construido con
 Google Sheets, Google Apps Script y Google Calendar.
 
+La visión y la arquitectura versión 1.0 fueron aprobadas por Gabriel el
+2026-08-06. La fase de arquitectura está cerrada y el trabajo posterior debe
+respetar la documentación aprobada.
+
 Antes de trabajar, revisar:
 
 - `README.md`
 - `docs/vision.md`
+- `docs/scope.md`
 - `docs/architecture.md`
+- `docs/domain-model.md`
+- `docs/migration-strategy.md`
+- `docs/non-functional-requirements.md`
 - `docs/decisions/`
 
 ## Reglas generales
@@ -24,9 +32,10 @@ Antes de trabajar, revisar:
 - No introducir secretos, contraseñas o claves en el repositorio.
 - No guardar credenciales reales en archivos versionados.
 - No modificar la arquitectura sin registrar una decisión técnica.
+- No ampliar el MVP sin actualizar y aprobar `docs/scope.md`.
 - No considerar una tarea terminada sin verificar el resultado.
 - Priorizar soluciones simples, mantenibles y fáciles de probar.
-- Evitar microservicios salvo que exista una necesidad demostrable.
+- No crear microservicios durante el MVP.
 
 ## Flujo de trabajo
 
@@ -54,7 +63,8 @@ Después de escribir código:
 - Utilizar nombres descriptivos.
 - Mantener funciones pequeñas.
 - Separar lógica de negocio, acceso a datos y presentación.
-- Validar datos recibidos desde formularios o APIs.
+- Respetar los límites modulares definidos en `docs/architecture.md`.
+- Validar datos recibidos desde formularios, importaciones o APIs.
 - Manejar errores explícitamente.
 - Agregar pruebas para reglas de negocio importantes.
 - Evitar código duplicado.
@@ -76,21 +86,25 @@ Antes de instalar una dependencia nueva:
 - No editar manualmente bases de datos de producción.
 - No incluir datos personales reales en pruebas.
 - Mantener la lógica de negocio fuera de las consultas de interfaz.
+- Incluir `userId` y filtrar por usuario según el ADR 0003.
+- No realizar borrado físico normal de tareas durante el MVP; archivar en su
+  lugar.
 
 ## Seguridad
 
 - Nunca mostrar claves, tokens o contraseñas.
 - Utilizar variables de entorno.
 - Mantener `.env` fuera de Git.
-- Crear `.env.example` sin valores secretos.
-- Validar permisos del usuario en el servidor.
+- Crear `.env.example` sin valores secretos cuando se configure la aplicación.
+- Validar autenticación y permisos del usuario en el servidor.
 - No confiar solamente en controles visuales del frontend.
+- No registrar secretos ni datos personales innecesarios en logs.
 
 ## Definición de terminado
 
 Una tarea se considera terminada cuando:
 
-- Cumple el requisito solicitado.
+- Cumple el requisito solicitado y el alcance aprobado.
 - No rompe funcionalidades existentes.
 - Las validaciones pasan.
 - Las pruebas relacionadas pasan.
@@ -99,14 +113,13 @@ Una tarea se considera terminada cuando:
 - La documentación fue actualizada cuando corresponde.
 - Se explicó cómo verificar el resultado.
 
-## Restricciones actuales
+## Restricciones de implementación
 
-Mientras el proyecto esté en fase de arquitectura:
-
-- No generar la aplicación completa.
-- No instalar frameworks.
-- No crear bases de datos.
-- No implementar autenticación.
-- No implementar integraciones externas.
-
-Primero deben aprobarse la visión y la arquitectura.
+- Implementar el MVP de forma incremental; no generar la aplicación completa
+  en una sola tarea.
+- No crear funcionalidades posteriores al MVP sin autorización.
+- No implementar sincronización bidireccional con Google Calendar durante el
+  MVP.
+- No implementar multiusuario completo durante el MVP.
+- No introducir microservicios durante el MVP.
+- Toda modificación sustancial de la arquitectura aprobada requiere un ADR.
