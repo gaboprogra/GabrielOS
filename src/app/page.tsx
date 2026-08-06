@@ -32,6 +32,12 @@ export default function Home() {
           >
             Administrar categorías
           </Link>
+          <Link
+            href="/projects"
+            className="inline-flex rounded-xl border border-blue-600 px-5 py-3 font-semibold text-blue-700 transition hover:bg-blue-50"
+          >
+            Administrar proyectos
+          </Link>
         </section>
       </article>
     </main>

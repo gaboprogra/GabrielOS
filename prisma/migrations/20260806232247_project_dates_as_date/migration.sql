@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Project" ALTER COLUMN "startDate" SET DATA TYPE DATE,
+ALTER COLUMN "dueDate" SET DATA TYPE DATE;
