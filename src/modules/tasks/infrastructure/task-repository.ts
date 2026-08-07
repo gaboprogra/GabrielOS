@@ -385,3 +385,39 @@ export async function updateTaskWithHistory(
     };
   });
 }
+export async function listSchedulableTaskOptions(userId: string) {
+  return prisma.task.findMany({
+    where: {
+      userId,
+      status: {
+        in: ["PENDING", "IN_PROGRESS"],
+      },
+    },
+    orderBy: [
+      {
+        priority: "desc",
+      },
+      {
+        createdAt: "desc",
+      },
+    ],
+    select: {
+      id: true,
+      title: true,
+      priority: true,
+      estimatedMinutes: true,
+
+      category: {
+        select: {
+          name: true,
+        },
+      },
+
+      project: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+}

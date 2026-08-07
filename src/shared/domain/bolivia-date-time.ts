@@ -78,3 +78,19 @@ export function formatBoliviaDateTimeInput(date: Date | null): string {
     getPart(parts, "minute"),
   ].join("");
 }
+export function formatBoliviaDateInput(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: BOLIVIA_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  return [
+    getPart(parts, "year"),
+    "-",
+    getPart(parts, "month"),
+    "-",
+    getPart(parts, "day"),
+  ].join("");
+}

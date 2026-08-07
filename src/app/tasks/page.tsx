@@ -64,6 +64,9 @@ export default async function TasksPage() {
             <Link href="/projects" className="text-blue-700 hover:underline">
               Proyectos
             </Link>
+            <Link href="/daily-plan" className="text-blue-700 hover:underline">
+              Plan diario
+            </Link>
           </nav>
 
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950">
