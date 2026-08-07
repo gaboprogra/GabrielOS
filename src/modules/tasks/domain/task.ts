@@ -1,18 +1,17 @@
-export enum TaskStatus {
-  PENDING = "PENDING",
-  IN_PROGRESS = "IN_PROGRESS",
-  COMPLETED = "COMPLETED",
-  ARCHIVED = "ARCHIVED",
-}
+export const TASK_STATUSES = [
+  "PENDING",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "ARCHIVED",
+] as const;
 
-export interface Task {
-  id: string;
-  userId: string;
-  title: string;
-  status: TaskStatus;
-  dueAt: Date | null;
-  completedAt: Date | null;
-  archivedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type TaskStatus = (typeof TASK_STATUSES)[number];
+
+export const TASK_STATUS_ACTIONS = [
+  "START",
+  "COMPLETE",
+  "ARCHIVE",
+  "RESTORE",
+] as const;
+
+export type TaskStatusAction = (typeof TASK_STATUS_ACTIONS)[number];

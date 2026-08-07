@@ -1,6 +1,8 @@
 import "server-only";
 
 import { prisma } from "@/infrastructure/database/prisma";
+import { getTaskStatusTransition } from "../domain/get-task-status-transition";
+import type { TaskStatus, TaskStatusAction } from "../domain/task";
 
 type CreateTaskData = {
   userId: string;
@@ -17,7 +19,49 @@ type TaskRelationsValidation = {
   categoryIsValid: boolean;
   projectIsValid: boolean;
 };
+type ChangeTaskStatusData = {
+  userId: string;
+  taskId: string;
+  action: TaskStatusAction;
+  now: Date;
+};
 
+export type ChangeTaskStatusRepositoryResult =
+  | {
+      success: true;
+      nextStatus: TaskStatus;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+const taskListSelect = {
+  id: true,
+  title: true,
+  description: true,
+  status: true,
+  priority: true,
+  dueAt: true,
+  estimatedMinutes: true,
+  completedAt: true,
+  archivedAt: true,
+  createdAt: true,
+
+  category: {
+    select: {
+      id: true,
+      name: true,
+      color: true,
+    },
+  },
+
+  project: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+} as const;
 export async function validateTaskRelations(
   userId: string,
   categoryId: string | null,
@@ -113,30 +157,91 @@ export async function listActiveTasks(userId: string) {
       },
     ],
     take: 100,
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      status: true,
-      priority: true,
-      dueAt: true,
-      estimatedMinutes: true,
-      createdAt: true,
-
-      category: {
-        select: {
-          id: true,
-          name: true,
-          color: true,
-        },
-      },
-
-      project: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
+    select: taskListSelect,
+  });
+}
+export async function listArchivedTasks(userId: string) {
+  return prisma.task.findMany({
+    where: {
+      userId,
+      status: "ARCHIVED",
     },
+    orderBy: {
+      archivedAt: "desc",
+    },
+    take: 50,
+    select: taskListSelect,
+  });
+}
+export async function changeTaskStatusWithHistory(
+  data: ChangeTaskStatusData,
+): Promise<ChangeTaskStatusRepositoryResult> {
+  return prisma.$transaction(async (transaction) => {
+    const task = await transaction.task.findFirst({
+      where: {
+        id: data.taskId,
+        userId: data.userId,
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+      },
+    });
+
+    if (!task) {
+      return {
+        success: false,
+        error: "La tarea no existe.",
+      };
+    }
+
+    const transition = getTaskStatusTransition(
+      task.status,
+      data.action,
+      data.now,
+    );
+
+    if (!transition.success) {
+      return transition;
+    }
+
+    const updateResult = await transaction.task.updateMany({
+      where: {
+        id: task.id,
+        userId: data.userId,
+        status: task.status,
+      },
+      data: transition.patch,
+    });
+
+    if (updateResult.count !== 1) {
+      return {
+        success: false,
+        error:
+          "La tarea cambió mientras se procesaba la operación. Intenta nuevamente.",
+      };
+    }
+
+    await transaction.historyEntry.create({
+      data: {
+        userId: data.userId,
+        entityType: "TASK",
+        entityId: task.id,
+        action: transition.historyAction,
+        details: {
+          title: task.title,
+          command: data.action,
+          fromStatus: task.status,
+          toStatus: transition.patch.status,
+          changedAt: data.now.toISOString(),
+        },
+      },
+    });
+
+    return {
+      success: true,
+      nextStatus: transition.patch.status,
+    };
   });
 }

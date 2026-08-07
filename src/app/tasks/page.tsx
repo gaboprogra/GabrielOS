@@ -2,9 +2,13 @@ import Link from "next/link";
 
 import { listActiveCategories } from "@/modules/categories/infrastructure/category-repository";
 import { listActiveProjectOptions } from "@/modules/projects/infrastructure/project-repository";
-import { listActiveTasks } from "@/modules/tasks/infrastructure/task-repository";
+import {
+  listActiveTasks,
+  listArchivedTasks,
+} from "@/modules/tasks/infrastructure/task-repository";
 import { TaskForm } from "@/modules/tasks/presentation/task-form";
 import { getCurrentDevelopmentUserId } from "@/shared/infrastructure/get-current-development-user";
+import { TaskStatusActions } from "@/modules/tasks/presentation/task-status-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -37,10 +41,11 @@ function formatDueAt(date: Date | null): string {
 export default async function TasksPage() {
   const userId = await getCurrentDevelopmentUserId();
 
-  const [categories, projects, tasks] = await Promise.all([
+  const [categories, projects, tasks, archivedTasks] = await Promise.all([
     listActiveCategories(userId),
     listActiveProjectOptions(userId),
     listActiveTasks(userId),
+    listArchivedTasks(userId),
   ]);
 
   return (
@@ -154,6 +159,10 @@ export default async function TasksPage() {
                     </div>
 
                     <dl className="mt-4 grid gap-3 border-t border-slate-100 pt-4 text-sm sm:grid-cols-2">
+                      <TaskStatusActions
+                        taskId={task.id}
+                        status={task.status}
+                      />
                       <div>
                         <dt className="text-slate-500">Fecha límite</dt>
                         <dd className="font-medium text-slate-800">
@@ -170,6 +179,59 @@ export default async function TasksPage() {
                         </dd>
                       </div>
                     </dl>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+          <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-950">
+                  Tareas archivadas
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Puedes restaurarlas y volverán al estado pendiente.
+                </p>
+              </div>
+
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
+                {archivedTasks.length}
+              </span>
+            </div>
+
+            {archivedTasks.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-slate-300 px-5 py-8 text-center text-sm text-slate-500">
+                No existen tareas archivadas.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {archivedTasks.map((task) => (
+                  <li
+                    key={task.id}
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-medium text-slate-800">
+                          {task.title}
+                        </h3>
+
+                        <p className="mt-1 text-xs text-slate-500">
+                          Archivada
+                          {task.archivedAt
+                            ? ` el ${new Intl.DateTimeFormat("es-BO", {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                                timeZone: "America/La_Paz",
+                              }).format(task.archivedAt)}`
+                            : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    <TaskStatusActions taskId={task.id} status={task.status} />
                   </li>
                 ))}
               </ul>
