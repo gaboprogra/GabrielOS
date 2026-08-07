@@ -159,6 +159,7 @@ export default async function DailyPlanPage({
               className="flex items-center gap-2"
             >
               <input
+                key={selectedDateInput}
                 type="date"
                 name="date"
                 defaultValue={selectedDateInput}

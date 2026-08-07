@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 
 import { initialActionState } from "@/shared/application/action-state";
@@ -108,22 +109,37 @@ export function DailyPlanItemActions({
 
   return (
     <div className="mt-4 border-t border-slate-100 pt-4">
-      <form action={formAction} className="flex flex-wrap gap-2">
-        <input type="hidden" name="dailyPlanItemId" value={dailyPlanItemId} />
-
-        {actions.map((item) => (
-          <button
-            key={item.action}
-            type="submit"
-            name="action"
-            value={item.action}
-            disabled={isPending}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${item.className}`}
+      <div className="flex flex-wrap gap-2">
+        {status === "PLANNED" ? (
+          <Link
+            href={`/daily-plan/${dailyPlanItemId}/edit`}
+            className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
           >
-            {isPending ? "Procesando..." : item.label}
-          </button>
-        ))}
-      </form>
+            Reprogramar
+          </Link>
+        ) : null}
+
+        <form action={formAction} className="flex flex-wrap gap-2">
+          <input
+            type="hidden"
+            name="dailyPlanItemId"
+            value={dailyPlanItemId}
+          />
+
+          {actions.map((item) => (
+            <button
+              key={item.action}
+              type="submit"
+              name="action"
+              value={item.action}
+              disabled={isPending}
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${item.className}`}
+            >
+              {isPending ? "Procesando..." : item.label}
+            </button>
+          ))}
+        </form>
+      </div>
 
       {state.status === "error" ? (
         <p className="mt-2 text-sm text-red-700">{state.message}</p>

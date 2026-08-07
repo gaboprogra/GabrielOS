@@ -7,10 +7,8 @@ const timeSchema = z
   .trim()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "La hora ingresada no es válida.");
 
-export const scheduleDailyPlanItemSchema = z
+export const dailyPlanItemTimingSchema = z
   .object({
-    taskId: z.string().trim().min(1, "Debes seleccionar una tarea."),
-
     plannedDate: z
       .string()
       .trim()
@@ -37,3 +35,9 @@ export const scheduleDailyPlanItemSchema = z
       });
     }
   });
+
+export const scheduleDailyPlanItemSchema = dailyPlanItemTimingSchema.and(
+  z.object({
+    taskId: z.string().trim().min(1, "Debes seleccionar una tarea."),
+  }),
+);

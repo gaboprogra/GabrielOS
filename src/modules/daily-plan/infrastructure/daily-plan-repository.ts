@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/infrastructure/database/prisma";
 
 import { getDailyPlanItemRemoval } from "../domain/get-daily-plan-item-removal";
+import { getDailyPlanItemReschedule } from "../domain/get-daily-plan-item-reschedule";
 import { getDailyPlanItemTransition } from "../domain/get-daily-plan-item-transition";
 import type { DailyPlanItemAction } from "../domain/daily-plan-item-status";
 
@@ -52,6 +53,35 @@ type CalendarEventDeletionTarget = {
   eventId: string;
   itemRemoved: boolean;
 };
+
+type RescheduleDailyPlanItemData = {
+  userId: string;
+  dailyPlanItemId: string;
+  plannedDate: Date;
+  startsAt: Date;
+  endsAt: Date;
+  notes: string | null;
+};
+
+type CalendarEventUpdateTarget = {
+  eventId: string;
+  title: string;
+  startsAt: Date;
+  endsAt: Date;
+  notes: string | null;
+};
+
+export type RescheduleDailyPlanItemRepositoryResult =
+  | {
+      success: true;
+      changed: boolean;
+      plannedDate: Date;
+      calendarEventUpdate: CalendarEventUpdateTarget | null;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 export async function createDailyPlanItemWithHistory(
   data: CreateDailyPlanItemData,
@@ -265,6 +295,192 @@ export async function listDailyPlanItemsByDate(
         },
       },
     },
+  });
+}
+
+export async function findDailyPlanItemForReschedule(
+  userId: string,
+  dailyPlanItemId: string,
+) {
+  return prisma.dailyPlanItem.findFirst({
+    where: {
+      id: dailyPlanItemId,
+      userId,
+    },
+    select: {
+      id: true,
+      plannedDate: true,
+      startsAt: true,
+      endsAt: true,
+      notes: true,
+      status: true,
+      task: {
+        select: {
+          title: true,
+        },
+      },
+    },
+  });
+}
+
+export async function rescheduleDailyPlanItemWithHistory(
+  data: RescheduleDailyPlanItemData,
+): Promise<RescheduleDailyPlanItemRepositoryResult> {
+  return prisma.$transaction(async (transaction) => {
+    const item = await transaction.dailyPlanItem.findFirst({
+      where: {
+        id: data.dailyPlanItemId,
+        userId: data.userId,
+      },
+      select: {
+        id: true,
+        status: true,
+        plannedDate: true,
+        startsAt: true,
+        endsAt: true,
+        notes: true,
+        googleCalendarEventId: true,
+        task: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    if (!item) {
+      return {
+        success: false,
+        error: "La actividad no existe.",
+      };
+    }
+
+    const reschedule = getDailyPlanItemReschedule(item.status);
+
+    if (!reschedule.success) {
+      return reschedule;
+    }
+
+    const hasChanges =
+      item.plannedDate.getTime() !== data.plannedDate.getTime() ||
+      item.startsAt.getTime() !== data.startsAt.getTime() ||
+      item.endsAt.getTime() !== data.endsAt.getTime() ||
+      item.notes !== data.notes;
+
+    if (!hasChanges) {
+      return {
+        success: true,
+        changed: false,
+        plannedDate: item.plannedDate,
+        calendarEventUpdate: null,
+      };
+    }
+
+    const overlappingItem = await transaction.dailyPlanItem.findFirst({
+      where: {
+        id: {
+          not: item.id,
+        },
+        userId: data.userId,
+        plannedDate: data.plannedDate,
+        status: {
+          in: ["PLANNED", "IN_PROGRESS"],
+        },
+        startsAt: {
+          lt: data.endsAt,
+        },
+        endsAt: {
+          gt: data.startsAt,
+        },
+      },
+      select: {
+        task: {
+          select: {
+            title: true,
+          },
+        },
+      },
+    });
+
+    if (overlappingItem) {
+      return {
+        success: false,
+        error: `El horario se cruza con "${overlappingItem.task.title}".`,
+      };
+    }
+
+    const updateResult = await transaction.dailyPlanItem.updateMany({
+      where: {
+        id: item.id,
+        userId: data.userId,
+        status: item.status,
+        plannedDate: item.plannedDate,
+        startsAt: item.startsAt,
+        endsAt: item.endsAt,
+        notes: item.notes,
+      },
+      data: {
+        plannedDate: data.plannedDate,
+        startsAt: data.startsAt,
+        endsAt: data.endsAt,
+        notes: data.notes,
+        ...(item.googleCalendarEventId
+          ? {
+              calendarSyncStatus: "PENDING" as const,
+              calendarSyncError: null,
+            }
+          : {}),
+      },
+    });
+
+    if (updateResult.count !== 1) {
+      return {
+        success: false,
+        error:
+          "La actividad cambió mientras se procesaba la reprogramación.",
+      };
+    }
+
+    await transaction.historyEntry.create({
+      data: {
+        userId: data.userId,
+        entityType: "DAILY_PLAN_ITEM",
+        entityId: item.id,
+        action: "RESCHEDULED",
+        details: {
+          taskId: item.task.id,
+          taskTitle: item.task.title,
+          before: {
+            plannedDate: item.plannedDate.toISOString().slice(0, 10),
+            startsAt: item.startsAt.toISOString(),
+            endsAt: item.endsAt.toISOString(),
+            notes: item.notes,
+          },
+          after: {
+            plannedDate: data.plannedDate.toISOString().slice(0, 10),
+            startsAt: data.startsAt.toISOString(),
+            endsAt: data.endsAt.toISOString(),
+            notes: data.notes,
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      changed: true,
+      plannedDate: data.plannedDate,
+      calendarEventUpdate: item.googleCalendarEventId
+        ? {
+            eventId: item.googleCalendarEventId,
+            title: item.task.title,
+            startsAt: data.startsAt,
+            endsAt: data.endsAt,
+            notes: data.notes,
+          }
+        : null,
+    };
   });
 }
 
@@ -716,6 +932,45 @@ export async function markCalendarEventDeletionSucceeded(
 }
 
 export async function markCalendarEventDeletionFailed(
+  userId: string,
+  dailyPlanItemId: string,
+  eventId: string,
+  error: string,
+) {
+  await prisma.dailyPlanItem.updateMany({
+    where: {
+      id: dailyPlanItemId,
+      userId,
+      googleCalendarEventId: eventId,
+    },
+    data: {
+      calendarSyncStatus: "FAILED",
+      calendarSyncError: error,
+    },
+  });
+}
+
+export async function markCalendarEventUpdateSucceeded(
+  userId: string,
+  dailyPlanItemId: string,
+  eventId: string,
+  now: Date,
+) {
+  await prisma.dailyPlanItem.updateMany({
+    where: {
+      id: dailyPlanItemId,
+      userId,
+      googleCalendarEventId: eventId,
+    },
+    data: {
+      calendarSyncStatus: "SYNCED",
+      calendarSyncError: null,
+      calendarSyncedAt: now,
+    },
+  });
+}
+
+export async function markCalendarEventUpdateFailed(
   userId: string,
   dailyPlanItemId: string,
   eventId: string,

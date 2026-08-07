@@ -31,6 +31,23 @@ type DeleteCalendarEventResult =
       error: string;
     };
 
+type UpdateCalendarEventInput = {
+  eventId: string;
+  title: string;
+  startsAt: Date;
+  endsAt: Date;
+  notes: string | null;
+};
+
+type UpdateCalendarEventResult =
+  | {
+      success: true;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
 export async function createGoogleCalendarEvent(
   input: CreateCalendarEventInput,
 ): Promise<CreateCalendarEventResult> {
@@ -175,6 +192,81 @@ export async function deleteGoogleCalendarEvent(
     };
   } catch (error: unknown) {
     console.error("Error eliminando evento de Google Calendar:", error);
+
+    return {
+      success: false,
+      error: "No se pudo conectar con Google Calendar.",
+    };
+  }
+}
+
+export async function updateGoogleCalendarEvent(
+  input: UpdateCalendarEventInput,
+): Promise<UpdateCalendarEventResult> {
+  const url = process.env.GOOGLE_CALENDAR_BRIDGE_URL;
+  const secret = process.env.GOOGLE_CALENDAR_BRIDGE_SECRET;
+
+  if (!url || !secret) {
+    return {
+      success: false,
+      error: "Google Calendar Bridge no está configurado.",
+    };
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "update",
+        secret,
+        eventId: input.eventId,
+        title: input.title,
+        startsAt: input.startsAt.toISOString(),
+        endsAt: input.endsAt.toISOString(),
+        notes: input.notes,
+      }),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `Apps Script respondió ${response.status}.`,
+      };
+    }
+
+    const data: unknown = await response.json();
+
+    if (typeof data !== "object" || data === null) {
+      return {
+        success: false,
+        error: "Apps Script devolvió una respuesta inválida.",
+      };
+    }
+
+    const result = data as {
+      success?: boolean;
+      error?: unknown;
+    };
+
+    if (result.success !== true) {
+      return {
+        success: false,
+        error:
+          typeof result.error === "string"
+            ? result.error.slice(0, 500)
+            : "Google Calendar no actualizó el evento.",
+      };
+    }
+
+    return {
+      success: true,
+    };
+  } catch (error: unknown) {
+    console.error("Error actualizando evento de Google Calendar:", error);
 
     return {
       success: false,

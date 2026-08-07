@@ -73,6 +73,7 @@ export function ScheduleDailyPlanItemForm({
         </label>
 
         <input
+          key={defaultDate}
           id="plan-date"
           name="plannedDate"
           type="date"
