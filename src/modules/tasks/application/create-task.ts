@@ -13,6 +13,7 @@ type CreateTaskCommand = {
   priority: unknown;
   dueAt: unknown;
   estimatedMinutes: unknown;
+  kind: unknown;
 };
 
 export type CreateTaskResult =
@@ -36,6 +37,7 @@ export async function createTask(
     priority: command.priority,
     dueAt: command.dueAt,
     estimatedMinutes: command.estimatedMinutes,
+    kind: command.kind,
   });
 
   if (!validation.success) {
@@ -76,6 +78,7 @@ export async function createTask(
     priority: validation.data.priority,
     dueAt: validation.data.dueAt,
     estimatedMinutes: validation.data.estimatedMinutes,
+    kind: validation.data.kind,
   });
 
   return {

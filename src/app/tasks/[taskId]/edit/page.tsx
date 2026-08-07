@@ -62,6 +62,7 @@ export default async function EditTaskPage({ params }: EditTaskPageProps) {
               dueAtInput: formatBoliviaDateTimeInput(task.dueAt),
               estimatedMinutes: task.estimatedMinutes,
               status: task.status,
+              kind: task.kind,
             }}
             categories={categories}
             projects={projects}

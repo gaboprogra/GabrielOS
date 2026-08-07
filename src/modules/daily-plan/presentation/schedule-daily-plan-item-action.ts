@@ -34,7 +34,9 @@ export async function scheduleDailyPlanItemAction(
 
     return {
       status: "success",
-      message: "Tarea agregada correctamente al plan diario.",
+      message: result.calendarSynced
+        ? "Tarea programada y sincronizada con Google Calendar."
+        : "Tarea programada, pero Google Calendar no pudo sincronizarse.",
     };
   } catch (error: unknown) {
     console.error("No se pudo programar la tarea:", error);

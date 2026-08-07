@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { parseBoliviaDateTime } from "@/shared/domain/bolivia-date-time";
+import { TASK_KINDS } from "./task-kind";
 
 const taskPriorities = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
@@ -43,6 +44,7 @@ export const createTaskSchema = z.object({
     .trim()
     .max(3000, "La descripción no puede superar los 3000 caracteres.")
     .transform((value) => (value === "" ? null : value)),
+  kind: z.enum(TASK_KINDS),
 
   categoryId: nullableIdSchema,
   projectId: nullableIdSchema,

@@ -2,7 +2,12 @@ import { parseBoliviaDateTime } from "@/shared/domain/bolivia-date-time";
 import { parseDateInput } from "@/shared/domain/date-input";
 
 import { scheduleDailyPlanItemSchema } from "../domain/schedule-daily-plan-item-schema";
-import { createDailyPlanItemWithHistory } from "../infrastructure/daily-plan-repository";
+import {
+  createDailyPlanItemWithHistory,
+  markCalendarSyncFailed,
+  markCalendarSyncSucceeded,
+} from "../infrastructure/daily-plan-repository";
+import { createGoogleCalendarEvent } from "@/infrastructure/google-calendar/google-calendar-bridge";
 
 type ScheduleDailyPlanItemCommand = {
   userId: string;
@@ -16,6 +21,7 @@ type ScheduleDailyPlanItemCommand = {
 export type ScheduleDailyPlanItemResult =
   | {
       success: true;
+      calendarSynced: boolean;
     }
   | {
       success: false;
@@ -72,7 +78,39 @@ export async function scheduleDailyPlanItem(
     return result;
   }
 
+  const calendarResult = await createGoogleCalendarEvent({
+    dailyPlanItemId: result.dailyPlanItemId,
+
+    title: result.taskTitle,
+
+    startsAt: result.startsAt,
+    endsAt: result.endsAt,
+
+    notes: result.notes,
+  });
+
+  if (!calendarResult.success) {
+    await markCalendarSyncFailed(
+      command.userId,
+      result.dailyPlanItemId,
+      calendarResult.error,
+    );
+
+    return {
+      success: true,
+      calendarSynced: false,
+    };
+  }
+
+  await markCalendarSyncSucceeded(
+    command.userId,
+    result.dailyPlanItemId,
+    calendarResult.eventId,
+    new Date(),
+  );
+
   return {
     success: true,
+    calendarSynced: true,
   };
 }

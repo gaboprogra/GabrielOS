@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/infrastructure/database/prisma";
 import { getTaskStatusTransition } from "../domain/get-task-status-transition";
 import type { TaskStatus, TaskStatusAction } from "../domain/task";
+import { TaskKind } from "../domain/task-kind";
 
 type CreateTaskData = {
   userId: string;
@@ -10,6 +11,7 @@ type CreateTaskData = {
   projectId: string | null;
   title: string;
   description: string | null;
+  kind: TaskKind;
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   dueAt: Date | null;
   estimatedMinutes: number | null;
@@ -42,6 +44,7 @@ type UpdateTaskData = {
   projectId: string | null;
   title: string;
   description: string | null;
+  kind: TaskKind;
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   dueAt: Date | null;
   estimatedMinutes: number | null;
@@ -59,6 +62,7 @@ const taskListSelect = {
   id: true,
   title: true,
   description: true,
+  kind: true,
   status: true,
   priority: true,
   dueAt: true,
@@ -133,6 +137,7 @@ export async function createTaskWithHistory(data: CreateTaskData) {
         priority: data.priority,
         dueAt: data.dueAt,
         estimatedMinutes: data.estimatedMinutes,
+        kind: data.kind,
       },
     });
 
@@ -144,6 +149,7 @@ export async function createTaskWithHistory(data: CreateTaskData) {
         action: "CREATED",
         details: {
           title: task.title,
+          kind: data.kind,
           priority: task.priority,
           categoryId: task.categoryId,
           projectId: task.projectId,
@@ -206,6 +212,7 @@ export async function changeTaskStatusWithHistory(
         id: true,
         title: true,
         status: true,
+        kind: true,
       },
     });
 
@@ -220,6 +227,7 @@ export async function changeTaskStatusWithHistory(
       task.status,
       data.action,
       data.now,
+      task.kind,
     );
 
     if (!transition.success) {
@@ -278,6 +286,7 @@ export async function findTaskForEdit(userId: string, taskId: string) {
       id: true,
       title: true,
       description: true,
+      kind: true,
       priority: true,
       dueAt: true,
       estimatedMinutes: true,
@@ -301,12 +310,14 @@ export async function updateTaskWithHistory(
         id: true,
         title: true,
         description: true,
+        kind: true,
         priority: true,
         dueAt: true,
         estimatedMinutes: true,
         categoryId: true,
         projectId: true,
         status: true,
+        completedAt: true,
       },
     });
 
@@ -335,11 +346,19 @@ export async function updateTaskWithHistory(
       data: {
         title: data.title,
         description: data.description,
+        kind: data.kind,
         categoryId: data.categoryId,
         projectId: data.projectId,
         priority: data.priority,
         dueAt: data.dueAt,
         estimatedMinutes: data.estimatedMinutes,
+
+        ...(data.kind === "REUSABLE"
+          ? {
+              status: "PENDING" as const,
+              completedAt: null,
+            }
+          : {}),
       },
     });
 
@@ -389,9 +408,21 @@ export async function listSchedulableTaskOptions(userId: string) {
   return prisma.task.findMany({
     where: {
       userId,
-      status: {
-        in: ["PENDING", "IN_PROGRESS"],
-      },
+
+      OR: [
+        {
+          kind: "REUSABLE",
+          status: {
+            not: "ARCHIVED",
+          },
+        },
+        {
+          kind: "ONE_TIME",
+          status: {
+            in: ["PENDING", "IN_PROGRESS"],
+          },
+        },
+      ],
     },
     orderBy: [
       {
@@ -404,6 +435,7 @@ export async function listSchedulableTaskOptions(userId: string) {
     select: {
       id: true,
       title: true,
+      kind: true,
       priority: true,
       estimatedMinutes: true,
 

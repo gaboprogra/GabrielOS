@@ -174,6 +174,7 @@ export default async function TasksPage() {
                       <TaskStatusActions
                         taskId={task.id}
                         status={task.status}
+                        kind={task.kind}
                       />
                       <div>
                         <dt className="text-slate-500">Fecha límite</dt>
@@ -243,7 +244,11 @@ export default async function TasksPage() {
                       </div>
                     </div>
 
-                    <TaskStatusActions taskId={task.id} status={task.status} />
+                    <TaskStatusActions
+                      taskId={task.id}
+                      status={task.status}
+                      kind={task.kind}
+                    />
                   </li>
                 ))}
               </ul>

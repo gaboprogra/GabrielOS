@@ -1,4 +1,5 @@
 import type { TaskStatus, TaskStatusAction } from "./task";
+import type { TaskKind } from "./task-kind";
 
 type HistoryAction = "STATUS_CHANGED" | "COMPLETED" | "ARCHIVED" | "RESTORED";
 
@@ -23,7 +24,15 @@ export function getTaskStatusTransition(
   currentStatus: TaskStatus,
   action: TaskStatusAction,
   now: Date,
+  kind: TaskKind = "ONE_TIME",
 ): TaskStatusTransitionResult {
+  if (kind === "REUSABLE" && (action === "START" || action === "COMPLETE")) {
+    return {
+      success: false,
+      error:
+        "Las tareas reutilizables se completan desde una ejecución del plan diario.",
+    };
+  }
   if (action === "START") {
     if (currentStatus !== "PENDING") {
       return {

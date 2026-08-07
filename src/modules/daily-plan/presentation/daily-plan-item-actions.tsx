@@ -4,27 +4,26 @@ import { useActionState } from "react";
 
 import { initialActionState } from "@/shared/application/action-state";
 
-import type { TaskStatus, TaskStatusAction } from "../domain/task";
-import { changeTaskStatusAction } from "./change-task-status-action";
-import type { TaskKind } from "../domain/task-kind";
+import type {
+  DailyPlanItemAction,
+  DailyPlanItemStatus,
+} from "../domain/daily-plan-item-status";
 
-type TaskStatusActionsProps = {
-  taskId: string;
-  status: TaskStatus;
-  kind: TaskKind;
+import { changeDailyPlanItemStatusAction } from "./change-daily-plan-item-status-action";
+
+type DailyPlanItemActionsProps = {
+  dailyPlanItemId: string;
+  status: DailyPlanItemStatus;
 };
 
-type ActionButton = {
-  action: TaskStatusAction;
+type ActionDefinition = {
+  action: DailyPlanItemAction;
   label: string;
   className: string;
 };
 
-function getAvailableActions(
-  status: TaskStatus,
-  kind: TaskKind,
-): ActionButton[] {
-  if (status === "PENDING") {
+function getAvailableActions(status: DailyPlanItemStatus): ActionDefinition[] {
+  if (status === "PLANNED") {
     return [
       {
         action: "START",
@@ -37,8 +36,13 @@ function getAvailableActions(
         className: "bg-green-100 text-green-800 hover:bg-green-200",
       },
       {
-        action: "ARCHIVE",
-        label: "Archivar",
+        action: "SKIP",
+        label: "Omitir",
+        className: "bg-violet-100 text-violet-800 hover:bg-violet-200",
+      },
+      {
+        action: "CANCEL",
+        label: "Cancelar",
         className: "bg-slate-100 text-slate-700 hover:bg-slate-200",
       },
     ];
@@ -52,48 +56,40 @@ function getAvailableActions(
         className: "bg-green-100 text-green-800 hover:bg-green-200",
       },
       {
-        action: "ARCHIVE",
-        label: "Archivar",
-        className: "bg-slate-100 text-slate-700 hover:bg-slate-200",
+        action: "SKIP",
+        label: "Omitir",
+        className: "bg-violet-100 text-violet-800 hover:bg-violet-200",
       },
-    ];
-  }
-
-  if (status === "COMPLETED") {
-    return [
       {
-        action: "ARCHIVE",
-        label: "Archivar",
+        action: "CANCEL",
+        label: "Cancelar",
         className: "bg-slate-100 text-slate-700 hover:bg-slate-200",
       },
     ];
   }
 
-  return [
-    {
-      action: "RESTORE",
-      label: "Restaurar",
-      className: "bg-blue-100 text-blue-800 hover:bg-blue-200",
-    },
-  ];
+  return [];
 }
 
-export function TaskStatusActions({
-  taskId,
+export function DailyPlanItemActions({
+  dailyPlanItemId,
   status,
-  kind,
-}: TaskStatusActionsProps) {
+}: DailyPlanItemActionsProps) {
   const [state, formAction, isPending] = useActionState(
-    changeTaskStatusAction,
+    changeDailyPlanItemStatusAction,
     initialActionState,
   );
 
-  const actions = getAvailableActions(status, kind);
+  const actions = getAvailableActions(status);
+
+  if (actions.length === 0) {
+    return null;
+  }
 
   return (
     <div className="mt-4 border-t border-slate-100 pt-4">
       <form action={formAction} className="flex flex-wrap gap-2">
-        <input type="hidden" name="taskId" value={taskId} />
+        <input type="hidden" name="dailyPlanItemId" value={dailyPlanItemId} />
 
         {actions.map((item) => (
           <button
@@ -109,17 +105,8 @@ export function TaskStatusActions({
         ))}
       </form>
 
-      {state.message ? (
-        <p
-          aria-live="polite"
-          className={
-            state.status === "error"
-              ? "mt-3 text-sm text-red-700"
-              : "mt-3 text-sm text-green-700"
-          }
-        >
-          {state.message}
-        </p>
+      {state.status === "error" ? (
+        <p className="mt-2 text-sm text-red-700">{state.message}</p>
       ) : null}
     </div>
   );

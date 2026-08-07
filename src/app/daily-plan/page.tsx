@@ -6,6 +6,7 @@ import { listSchedulableTaskOptions } from "@/modules/tasks/infrastructure/task-
 import { formatBoliviaDateInput } from "@/shared/domain/bolivia-date-time";
 import { addDaysToDateInput, parseDateInput } from "@/shared/domain/date-input";
 import { getCurrentDevelopmentUserId } from "@/shared/infrastructure/get-current-development-user";
+import { DailyPlanItemActions } from "@/modules/daily-plan/presentation/daily-plan-item-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,17 @@ function formatSelectedDate(date: Date): string {
 
 function getDurationMinutes(startsAt: Date, endsAt: Date): number {
   return Math.round((endsAt.getTime() - startsAt.getTime()) / 60000);
+}
+function getStatusClassName(status: string): string {
+  const classes: Record<string, string> = {
+    PLANNED: "bg-blue-50 text-blue-700",
+    IN_PROGRESS: "bg-amber-50 text-amber-700",
+    COMPLETED: "bg-green-50 text-green-700",
+    SKIPPED: "bg-violet-50 text-violet-700",
+    CANCELLED: "bg-slate-100 text-slate-500",
+  };
+
+  return classes[status] ?? "bg-slate-100 text-slate-700";
 }
 
 export default async function DailyPlanPage({
@@ -255,7 +267,11 @@ export default async function DailyPlanPage({
                         </div>
                       </div>
 
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClassName(
+                          item.status,
+                        )}`}
+                      >
                         {statusLabels[item.status] ?? item.status}
                       </span>
                     </div>
@@ -300,6 +316,10 @@ export default async function DailyPlanPage({
                         </p>
                       </div>
                     ) : null}
+                    <DailyPlanItemActions
+                      dailyPlanItemId={item.id}
+                      status={item.status}
+                    />
                   </li>
                 ))}
               </ol>

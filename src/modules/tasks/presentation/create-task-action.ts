@@ -18,6 +18,7 @@ export async function createTaskAction(
       userId,
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? ""),
+      kind: formData.get("kind"),
       categoryId: String(formData.get("categoryId") ?? ""),
       projectId: String(formData.get("projectId") ?? ""),
       priority: String(formData.get("priority") ?? ""),

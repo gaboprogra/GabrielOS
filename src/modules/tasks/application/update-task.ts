@@ -14,6 +14,7 @@ type UpdateTaskCommand = {
   priority: unknown;
   dueAt: unknown;
   estimatedMinutes: unknown;
+  kind: unknown;
 };
 
 export type UpdateTaskResult =
@@ -32,6 +33,8 @@ export async function updateTask(
     taskId: command.taskId,
     title: command.title,
     description: command.description,
+    kind: command.kind, // 👈
+
     categoryId: command.categoryId,
     projectId: command.projectId,
     priority: command.priority,
@@ -78,5 +81,6 @@ export async function updateTask(
     priority: validation.data.priority,
     dueAt: validation.data.dueAt,
     estimatedMinutes: validation.data.estimatedMinutes,
+    kind: validation.data.kind,
   });
 }

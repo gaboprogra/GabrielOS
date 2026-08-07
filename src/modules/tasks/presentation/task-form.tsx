@@ -129,6 +129,30 @@ export function TaskForm({ categories, projects }: TaskFormProps) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <label
+            htmlFor="task-kind"
+            className="block text-sm font-medium text-slate-700"
+          >
+            Tipo de tarea
+          </label>
+
+          <select
+            id="task-kind"
+            name="kind"
+            defaultValue="ONE_TIME"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950"
+          >
+            <option value="ONE_TIME">Una sola vez</option>
+
+            <option value="REUSABLE">Reutilizable</option>
+          </select>
+
+          <p className="text-xs text-slate-500">
+            Las reutilizables permanecen disponibles después de completar una
+            ejecución.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <label
             htmlFor="task-priority"
             className="block text-sm font-medium text-slate-700"
           >
