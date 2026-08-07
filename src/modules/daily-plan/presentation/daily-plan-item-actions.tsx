@@ -45,6 +45,11 @@ function getAvailableActions(status: DailyPlanItemStatus): ActionDefinition[] {
         label: "Cancelar",
         className: "bg-slate-100 text-slate-700 hover:bg-slate-200",
       },
+      {
+        action: "REMOVE",
+        label: "Quitar del plan",
+        className: "bg-red-50 text-red-700 hover:bg-red-100",
+      },
     ];
   }
 
@@ -64,6 +69,21 @@ function getAvailableActions(status: DailyPlanItemStatus): ActionDefinition[] {
         action: "CANCEL",
         label: "Cancelar",
         className: "bg-slate-100 text-slate-700 hover:bg-slate-200",
+      },
+      {
+        action: "REMOVE",
+        label: "Quitar del plan",
+        className: "bg-red-50 text-red-700 hover:bg-red-100",
+      },
+    ];
+  }
+
+  if (status === "SKIPPED" || status === "CANCELLED") {
+    return [
+      {
+        action: "REMOVE",
+        label: "Quitar del plan",
+        className: "bg-red-50 text-red-700 hover:bg-red-100",
       },
     ];
   }

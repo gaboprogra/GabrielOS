@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/infrastructure/database/prisma";
 
+import { getDailyPlanItemRemoval } from "../domain/get-daily-plan-item-removal";
 import { getDailyPlanItemTransition } from "../domain/get-daily-plan-item-transition";
 import type { DailyPlanItemAction } from "../domain/daily-plan-item-status";
 
@@ -38,11 +39,19 @@ type ChangeDailyPlanItemStatusData = {
 export type ChangeDailyPlanItemStatusResult =
   | {
       success: true;
+      removed: boolean;
+      calendarEventDeletions: CalendarEventDeletionTarget[];
     }
   | {
       success: false;
       error: string;
     };
+
+type CalendarEventDeletionTarget = {
+  dailyPlanItemId: string;
+  eventId: string;
+  itemRemoved: boolean;
+};
 
 export async function createDailyPlanItemWithHistory(
   data: CreateDailyPlanItemData,
@@ -275,6 +284,7 @@ export async function changeDailyPlanItemStatusWithHistory(
         plannedDate: true,
         startsAt: true,
         endsAt: true,
+        googleCalendarEventId: true,
 
         task: {
           select: {
@@ -294,6 +304,80 @@ export async function changeDailyPlanItemStatusWithHistory(
       };
     }
 
+    if (data.action === "REMOVE") {
+      const removal = getDailyPlanItemRemoval(
+        item.status,
+        item.task.kind,
+        item.task.status,
+      );
+
+      if (!removal.success) {
+        return removal;
+      }
+
+      const deleteResult = await transaction.dailyPlanItem.deleteMany({
+        where: {
+          id: item.id,
+          userId: data.userId,
+          status: item.status,
+        },
+      });
+
+      if (deleteResult.count !== 1) {
+        return {
+          success: false,
+          error: "La actividad cambió mientras se procesaba la operación.",
+        };
+      }
+
+      if (removal.resetTaskToPending) {
+        const taskUpdate = await transaction.task.updateMany({
+          where: {
+            id: item.task.id,
+            userId: data.userId,
+            status: "IN_PROGRESS",
+          },
+          data: {
+            status: "PENDING",
+            completedAt: null,
+          },
+        });
+
+        if (taskUpdate.count === 1) {
+          await transaction.historyEntry.create({
+            data: {
+              userId: data.userId,
+              entityType: "TASK",
+              entityId: item.task.id,
+              action: "STATUS_CHANGED",
+              details: {
+                fromStatus: "IN_PROGRESS",
+                toStatus: "PENDING",
+                source: "DAILY_PLAN_ITEM_REMOVED",
+                dailyPlanItemId: item.id,
+              },
+            },
+          });
+        }
+      }
+
+      return {
+        success: true,
+        removed: true,
+        calendarEventDeletions: item.googleCalendarEventId
+          ? [
+              {
+                dailyPlanItemId: item.id,
+                eventId: item.googleCalendarEventId,
+                itemRemoved: true,
+              },
+            ]
+          : [],
+      };
+    }
+
+    const calendarEventDeletions: CalendarEventDeletionTarget[] = [];
+
     const transition = getDailyPlanItemTransition(
       item.status,
       data.action,
@@ -309,13 +393,33 @@ export async function changeDailyPlanItemStatusWithHistory(
      * El filtro por estado actual evita aplicar dos veces una acción
      * si llegan peticiones concurrentes.
      */
+    const shouldDeleteCalendarEvent =
+      (data.action === "COMPLETE" || data.action === "CANCEL") &&
+      item.googleCalendarEventId !== null;
+
+    if (shouldDeleteCalendarEvent && item.googleCalendarEventId) {
+      calendarEventDeletions.push({
+        dailyPlanItemId: item.id,
+        eventId: item.googleCalendarEventId,
+        itemRemoved: false,
+      });
+    }
+
     const updateResult = await transaction.dailyPlanItem.updateMany({
       where: {
         id: item.id,
         userId: data.userId,
         status: item.status,
       },
-      data: transition.patch,
+      data: {
+        ...transition.patch,
+        ...(shouldDeleteCalendarEvent
+          ? {
+              calendarSyncStatus: "PENDING" as const,
+              calendarSyncError: null,
+            }
+          : {}),
+      },
     });
 
     if (updateResult.count !== 1) {
@@ -409,7 +513,7 @@ export async function changeDailyPlanItemStatusWithHistory(
          * más de una programación activa de una ONE_TIME.
          * Con la regla nueva de creación ya no deberían generarse duplicados.
          */
-        const otherItems = await transaction.dailyPlanItem.findMany({
+        const otherItems = await transaction.dailyPlanItem.updateManyAndReturn({
           where: {
             userId: data.userId,
             taskId: item.task.id,
@@ -420,13 +524,32 @@ export async function changeDailyPlanItemStatusWithHistory(
               in: ["PLANNED", "IN_PROGRESS"],
             },
           },
+          data: {
+            status: "CANCELLED",
+            cancelledAt: data.now,
+          },
           select: {
             id: true,
+            googleCalendarEventId: true,
           },
         });
 
         if (otherItems.length > 0) {
           const otherItemIds = otherItems.map((otherItem) => otherItem.id);
+
+          calendarEventDeletions.push(
+            ...otherItems.flatMap((otherItem) =>
+              otherItem.googleCalendarEventId
+                ? [
+                    {
+                      dailyPlanItemId: otherItem.id,
+                      eventId: otherItem.googleCalendarEventId,
+                      itemRemoved: false,
+                    },
+                  ]
+                : [],
+            ),
+          );
 
           await transaction.dailyPlanItem.updateMany({
             where: {
@@ -434,13 +557,13 @@ export async function changeDailyPlanItemStatusWithHistory(
               id: {
                 in: otherItemIds,
               },
-              status: {
-                in: ["PLANNED", "IN_PROGRESS"],
+              googleCalendarEventId: {
+                not: null,
               },
             },
             data: {
-              status: "CANCELLED",
-              cancelledAt: data.now,
+              calendarSyncStatus: "PENDING",
+              calendarSyncError: null,
             },
           });
 
@@ -525,6 +648,8 @@ export async function changeDailyPlanItemStatusWithHistory(
 
     return {
       success: true,
+      removed: false,
+      calendarEventDeletions,
     };
   });
 }
@@ -563,6 +688,76 @@ export async function markCalendarSyncFailed(
     data: {
       calendarSyncStatus: "FAILED",
       calendarSyncError: error,
+    },
+  });
+}
+
+export async function markCalendarEventDeletionSucceeded(
+  userId: string,
+  dailyPlanItemId: string,
+  eventId: string,
+  now: Date,
+) {
+  await prisma.dailyPlanItem.updateMany({
+    where: {
+      id: dailyPlanItemId,
+      userId,
+      googleCalendarEventId: eventId,
+    },
+    data: {
+      // El identificador representa un vínculo externo activo. La fecha conserva
+      // cuándo se confirmó la eliminación sin dejar un evento sincronizable.
+      googleCalendarEventId: null,
+      calendarSyncStatus: "SYNCED",
+      calendarSyncError: null,
+      calendarSyncedAt: now,
+    },
+  });
+}
+
+export async function markCalendarEventDeletionFailed(
+  userId: string,
+  dailyPlanItemId: string,
+  eventId: string,
+  error: string,
+) {
+  await prisma.dailyPlanItem.updateMany({
+    where: {
+      id: dailyPlanItemId,
+      userId,
+      googleCalendarEventId: eventId,
+    },
+    data: {
+      calendarSyncStatus: "FAILED",
+      calendarSyncError: error,
+    },
+  });
+}
+
+export async function recordRemovedItemCalendarSyncFailure(
+  userId: string,
+  dailyPlanItemId: string,
+  eventId: string,
+  error: string,
+) {
+  /*
+   * REMOVE borra físicamente el DailyPlanItem, por lo que una falla externa ya
+   * no puede persistirse en sus columnas de sync. Esta entrada técnica e
+   * inmutable conserva lo necesario para un reintento futuro.
+   */
+  await prisma.historyEntry.create({
+    data: {
+      userId,
+      entityType: "CALENDAR_SYNC",
+      entityId: dailyPlanItemId,
+      action: "SYNC_FAILED",
+      details: {
+        operation: "DELETE_EVENT",
+        dailyPlanItemRemoved: true,
+        googleCalendarEventId: eventId,
+        calendarSyncStatus: "FAILED",
+        error,
+      },
     },
   });
 }

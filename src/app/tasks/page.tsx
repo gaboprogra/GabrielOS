@@ -3,8 +3,9 @@ import Link from "next/link";
 import { listActiveCategories } from "@/modules/categories/infrastructure/category-repository";
 import { listActiveProjectOptions } from "@/modules/projects/infrastructure/project-repository";
 import {
+  countArchivedTasks,
   listActiveTasks,
-  listArchivedTasks,
+  listRecentArchivedTasks,
 } from "@/modules/tasks/infrastructure/task-repository";
 import { TaskForm } from "@/modules/tasks/presentation/task-form";
 import { getCurrentDevelopmentUserId } from "@/shared/infrastructure/get-current-development-user";
@@ -41,12 +42,14 @@ function formatDueAt(date: Date | null): string {
 export default async function TasksPage() {
   const userId = await getCurrentDevelopmentUserId();
 
-  const [categories, projects, tasks, archivedTasks] = await Promise.all([
-    listActiveCategories(userId),
-    listActiveProjectOptions(userId),
-    listActiveTasks(userId),
-    listArchivedTasks(userId),
-  ]);
+  const [categories, projects, tasks, archivedTasks, archivedTaskCount] =
+    await Promise.all([
+      listActiveCategories(userId),
+      listActiveProjectOptions(userId),
+      listActiveTasks(userId),
+      listRecentArchivedTasks(userId),
+      countArchivedTasks(userId),
+    ]);
 
   return (
     <main className="min-h-screen bg-slate-50 px-5 py-10">
@@ -209,9 +212,18 @@ export default async function TasksPage() {
                 </p>
               </div>
 
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
-                {archivedTasks.length}
-              </span>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href="/tasks/archived"
+                  className="text-sm font-medium text-blue-700 hover:underline"
+                >
+                  Ver todas las archivadas
+                </Link>
+
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
+                  {archivedTaskCount}
+                </span>
+              </div>
             </div>
 
             {archivedTasks.length === 0 ? (

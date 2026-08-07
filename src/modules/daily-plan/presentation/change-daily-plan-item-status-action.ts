@@ -33,7 +33,9 @@ export async function changeDailyPlanItemStatusAction(
 
     return {
       status: "success",
-      message: "Actividad actualizada.",
+      message: result.removed
+        ? "Actividad quitada del plan."
+        : "Actividad actualizada.",
     };
   } catch (error: unknown) {
     console.error("No se pudo actualizar la actividad:", error);

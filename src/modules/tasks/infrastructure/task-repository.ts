@@ -186,6 +186,30 @@ export async function listActiveTasks(userId: string) {
     select: taskListSelect,
   });
 }
+
+export async function listRecentArchivedTasks(userId: string) {
+  return prisma.task.findMany({
+    where: {
+      userId,
+      status: "ARCHIVED",
+    },
+    orderBy: {
+      archivedAt: "desc",
+    },
+    take: 5,
+    select: taskListSelect,
+  });
+}
+
+export async function countArchivedTasks(userId: string) {
+  return prisma.task.count({
+    where: {
+      userId,
+      status: "ARCHIVED",
+    },
+  });
+}
+
 export async function listArchivedTasks(userId: string) {
   return prisma.task.findMany({
     where: {
@@ -195,7 +219,6 @@ export async function listArchivedTasks(userId: string) {
     orderBy: {
       archivedAt: "desc",
     },
-    take: 50,
     select: taskListSelect,
   });
 }

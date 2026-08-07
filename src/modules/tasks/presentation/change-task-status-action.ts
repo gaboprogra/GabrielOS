@@ -29,6 +29,7 @@ export async function changeTaskStatusAction(
     }
 
     revalidatePath("/tasks");
+    revalidatePath("/tasks/archived");
 
     return {
       status: "success",

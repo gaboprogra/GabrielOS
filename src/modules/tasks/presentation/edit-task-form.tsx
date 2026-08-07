@@ -201,6 +201,25 @@ export function EditTaskForm({
           className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-950"
         />
       </div>
+      <div className="space-y-2">
+        <label
+          htmlFor="edit-task-kind"
+          className="block text-sm font-medium text-slate-700"
+        >
+          Tipo de tarea
+        </label>
+
+        <select
+          id="edit-task-kind"
+          name="kind"
+          defaultValue={task.kind}
+          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950"
+        >
+          <option value="ONE_TIME">Una sola vez</option>
+
+          <option value="REUSABLE">Reutilizable</option>
+        </select>
+      </div>
 
       {state.message ? (
         <p
@@ -230,25 +249,6 @@ export function EditTaskForm({
         >
           Volver sin guardar
         </Link>
-      </div>
-      <div className="space-y-2">
-        <label
-          htmlFor="edit-task-kind"
-          className="block text-sm font-medium text-slate-700"
-        >
-          Tipo de tarea
-        </label>
-
-        <select
-          id="edit-task-kind"
-          name="kind"
-          defaultValue={task.kind}
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950"
-        >
-          <option value="ONE_TIME">Una sola vez</option>
-
-          <option value="REUSABLE">Reutilizable</option>
-        </select>
       </div>
     </form>
   );
