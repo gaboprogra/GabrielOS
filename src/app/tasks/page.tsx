@@ -115,9 +115,18 @@ export default async function TasksPage() {
                   >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-slate-950">
-                          {task.title}
-                        </h3>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h3 className="font-semibold text-slate-950">
+                            {task.title}
+                          </h3>
+
+                          <Link
+                            href={`/tasks/${task.id}/edit`}
+                            className="text-sm font-medium text-blue-700 hover:underline"
+                          >
+                            Editar
+                          </Link>
+                        </div>
 
                         {task.description ? (
                           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">

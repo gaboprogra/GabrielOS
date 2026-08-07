@@ -51,3 +51,30 @@ export function parseBoliviaDateTime(value: string): Date | null {
 
   return date;
 }
+export function formatBoliviaDateTimeInput(date: Date | null): string {
+  if (!date) {
+    return "";
+  }
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: BOLIVIA_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  return [
+    getPart(parts, "year"),
+    "-",
+    getPart(parts, "month"),
+    "-",
+    getPart(parts, "day"),
+    "T",
+    getPart(parts, "hour"),
+    ":",
+    getPart(parts, "minute"),
+  ].join("");
+}

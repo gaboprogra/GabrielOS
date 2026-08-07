@@ -35,6 +35,26 @@ export type ChangeTaskStatusRepositoryResult =
       success: false;
       error: string;
     };
+type UpdateTaskData = {
+  userId: string;
+  taskId: string;
+  categoryId: string | null;
+  projectId: string | null;
+  title: string;
+  description: string | null;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  dueAt: Date | null;
+  estimatedMinutes: number | null;
+};
+
+export type UpdateTaskRepositoryResult =
+  | {
+      success: true;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 const taskListSelect = {
   id: true,
   title: true,
@@ -242,6 +262,126 @@ export async function changeTaskStatusWithHistory(
     return {
       success: true,
       nextStatus: transition.patch.status,
+    };
+  });
+}
+export async function findTaskForEdit(userId: string, taskId: string) {
+  return prisma.task.findFirst({
+    where: {
+      id: taskId,
+      userId,
+      status: {
+        not: "ARCHIVED",
+      },
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      priority: true,
+      dueAt: true,
+      estimatedMinutes: true,
+      categoryId: true,
+      projectId: true,
+      status: true,
+    },
+  });
+}
+
+export async function updateTaskWithHistory(
+  data: UpdateTaskData,
+): Promise<UpdateTaskRepositoryResult> {
+  return prisma.$transaction(async (transaction) => {
+    const currentTask = await transaction.task.findFirst({
+      where: {
+        id: data.taskId,
+        userId: data.userId,
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        priority: true,
+        dueAt: true,
+        estimatedMinutes: true,
+        categoryId: true,
+        projectId: true,
+        status: true,
+      },
+    });
+
+    if (!currentTask) {
+      return {
+        success: false,
+        error: "La tarea no existe.",
+      };
+    }
+
+    if (currentTask.status === "ARCHIVED") {
+      return {
+        success: false,
+        error: "Una tarea archivada debe restaurarse antes de editarla.",
+      };
+    }
+
+    const updateResult = await transaction.task.updateMany({
+      where: {
+        id: currentTask.id,
+        userId: data.userId,
+        status: {
+          not: "ARCHIVED",
+        },
+      },
+      data: {
+        title: data.title,
+        description: data.description,
+        categoryId: data.categoryId,
+        projectId: data.projectId,
+        priority: data.priority,
+        dueAt: data.dueAt,
+        estimatedMinutes: data.estimatedMinutes,
+      },
+    });
+
+    if (updateResult.count !== 1) {
+      return {
+        success: false,
+        error:
+          "La tarea cambió mientras se procesaba la edición. Intenta nuevamente.",
+      };
+    }
+
+    await transaction.historyEntry.create({
+      data: {
+        userId: data.userId,
+        entityType: "TASK",
+        entityId: currentTask.id,
+        action: "UPDATED",
+        details: {
+          before: {
+            title: currentTask.title,
+            description: currentTask.description,
+            priority: currentTask.priority,
+            categoryId: currentTask.categoryId,
+            projectId: currentTask.projectId,
+            dueAt: currentTask.dueAt?.toISOString() ?? null,
+            estimatedMinutes: currentTask.estimatedMinutes,
+          },
+          after: {
+            title: data.title,
+            description: data.description,
+            priority: data.priority,
+            categoryId: data.categoryId,
+            projectId: data.projectId,
+            dueAt: data.dueAt?.toISOString() ?? null,
+            estimatedMinutes: data.estimatedMinutes,
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
     };
   });
 }
