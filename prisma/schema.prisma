@@ -53,6 +53,14 @@ enum HistoryAction {
   SYNC_FAILED
 }
 
+enum DailyPlanItemStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+  CANCELLED
+}
+
 model User {
   id       String @id @default(cuid())
   email    String @unique
@@ -62,6 +70,7 @@ model User {
   categories     Category[]
   projects       Project[]
   tasks          Task[]
+  dailyPlanItems DailyPlanItem[]
   historyEntries HistoryEntry[]
 
   createdAt DateTime @default(now())
@@ -129,9 +138,10 @@ model Task {
   completedAt      DateTime?
   archivedAt       DateTime?
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  project  Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  project        Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  dailyPlanItems DailyPlanItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -141,6 +151,34 @@ model Task {
   @@index([userId, priority])
   @@index([categoryId])
   @@index([projectId])
+}
+
+model DailyPlanItem {
+  id     String @id @default(cuid())
+  userId String
+  taskId String
+
+  plannedDate DateTime @db.Date
+  startsAt    DateTime
+  endsAt      DateTime
+
+  status   DailyPlanItemStatus @default(PLANNED)
+  position Int                 @default(0)
+  notes    String?             @db.Text
+
+  completedAt DateTime?
+  skippedAt   DateTime?
+  cancelledAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, plannedDate, status])
+  @@index([userId, startsAt])
+  @@index([taskId])
 }
 
 model HistoryEntry {
