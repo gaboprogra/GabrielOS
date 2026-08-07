@@ -1,14 +1,21 @@
 import Link from "next/link";
 
-import { listActiveCategories } from "@/modules/categories/infrastructure/category-repository";
+import {
+  listActiveCategories,
+  listArchivedCategories,
+} from "@/modules/categories/infrastructure/category-repository";
 import { CategoryForm } from "@/modules/categories/presentation/category-form";
 import { getCurrentDevelopmentUserId } from "@/shared/infrastructure/get-current-development-user";
+import { CategoryArchiveButton } from "@/modules/categories/presentation/category-archive-button";
 
 export const dynamic = "force-dynamic";
 
 export default async function CategoriesPage() {
   const userId = await getCurrentDevelopmentUserId();
-  const categories = await listActiveCategories(userId);
+  const [categories, archivedCategories] = await Promise.all([
+    listActiveCategories(userId),
+    listArchivedCategories(userId),
+  ]);
 
   return (
     <main className="min-h-screen bg-slate-50 px-5 py-10">
@@ -66,30 +73,84 @@ export default async function CategoriesPage() {
                 {categories.map((category) => (
                   <li
                     key={category.id}
-                    className="flex items-center gap-4 rounded-xl border border-slate-200 px-4 py-4"
+                    className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 px-4 py-4"
                   >
-                    <span
-                      aria-hidden="true"
-                      className="h-4 w-4 shrink-0 rounded-full"
-                      style={{
-                        backgroundColor: category.color ?? "#64748B",
-                      }}
-                    />
+                    <div className="flex items-center gap-4">
+                      <span
+                        aria-hidden="true"
+                        className="h-4 w-4 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor: category.color ?? "#64748B",
+                        }}
+                      />
 
-                    <div>
-                      <p className="font-medium text-slate-900">
-                        {category.name}
-                      </p>
+                      <div>
+                        <p className="font-medium text-slate-900">
+                          {category.name}
+                        </p>
 
-                      <p className="text-xs text-slate-500">
-                        Creada el{" "}
-                        {category.createdAt.toLocaleDateString("es-BO")}
-                      </p>
+                        <p className="text-xs text-slate-500">
+                          Creada el{" "}
+                          {category.createdAt.toLocaleDateString("es-BO")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/categories/${category.id}/edit`}
+                        className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+                      >
+                        Editar
+                      </Link>
+
+                      <CategoryArchiveButton
+                        categoryId={category.id}
+                        isArchived={false}
+                      />
                     </div>
                   </li>
                 ))}
               </ul>
             )}
+            <div className="mt-8 border-t border-slate-200 pt-6">
+              <h3 className="font-semibold text-slate-950">
+                Categorías archivadas
+              </h3>
+
+              {archivedCategories.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">
+                  No existen categorías archivadas.
+                </p>
+              ) : (
+                <ul className="mt-4 space-y-3">
+                  {archivedCategories.map((category) => (
+                    <li
+                      key={category.id}
+                      className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-slate-50 p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="h-4 w-4 rounded-full"
+                          style={{
+                            backgroundColor: category.color ?? "#64748B",
+                          }}
+                        />
+
+                        <span className="font-medium text-slate-700">
+                          {category.name}
+                        </span>
+                      </div>
+
+                      <CategoryArchiveButton
+                        categoryId={category.id}
+                        isArchived
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </section>
         </div>
       </div>
