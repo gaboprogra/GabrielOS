@@ -1,6 +1,11 @@
 import Link from "next/link";
 
-import { listProjects } from "@/modules/projects/infrastructure/project-repository";
+import {
+  listArchivedProjects,
+  listProjects,
+} from "@/modules/projects/infrastructure/project-repository";
+
+import { ProjectStatusActions } from "@/modules/projects/presentation/project-status-actions";
 import { ProjectForm } from "@/modules/projects/presentation/project-form";
 import { getCurrentDevelopmentUserId } from "@/shared/infrastructure/get-current-development-user";
 
@@ -29,7 +34,10 @@ function getStatusLabel(status: string): string {
 
 export default async function ProjectsPage() {
   const userId = await getCurrentDevelopmentUserId();
-  const projects = await listProjects(userId);
+  const [projects, archivedProjects] = await Promise.all([
+    listProjects(userId),
+    listArchivedProjects(userId),
+  ]);
 
   return (
     <main className="min-h-screen bg-slate-50 px-5 py-10">
@@ -96,6 +104,19 @@ export default async function ProjectsPage() {
                         <h3 className="font-semibold text-slate-950">
                           {project.name}
                         </h3>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <Link
+                            href={`/projects/${project.id}/edit`}
+                            className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
+                          >
+                            Editar
+                          </Link>
+                        </div>
+
+                        <ProjectStatusActions
+                          projectId={project.id}
+                          status={project.status}
+                        />
 
                         {project.description ? (
                           <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -128,6 +149,28 @@ export default async function ProjectsPage() {
                 ))}
               </ul>
             )}
+            <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-semibold">Proyectos archivados</h2>
+
+              {archivedProjects.length === 0 ? (
+                <p className="mt-4 text-sm text-slate-500">
+                  No existen proyectos archivados.
+                </p>
+              ) : (
+                <ul className="mt-4 space-y-3">
+                  {archivedProjects.map((project) => (
+                    <li key={project.id} className="rounded-xl bg-slate-50 p-4">
+                      <p className="font-medium">{project.name}</p>
+
+                      <ProjectStatusActions
+                        projectId={project.id}
+                        status={project.status}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
           </section>
         </div>
       </div>
