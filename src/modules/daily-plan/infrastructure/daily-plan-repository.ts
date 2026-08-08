@@ -24,6 +24,7 @@ export type CreateDailyPlanItemResult =
       startsAt: Date;
       endsAt: Date;
       notes: string | null;
+      categoryColor: string | null;
     }
   | {
       success: false;
@@ -69,6 +70,7 @@ type CalendarEventUpdateTarget = {
   startsAt: Date;
   endsAt: Date;
   notes: string | null;
+  categoryColor: string | null;
 };
 
 export type RescheduleDailyPlanItemRepositoryResult =
@@ -111,6 +113,11 @@ export async function createDailyPlanItemWithHistory(
         title: true,
         kind: true,
         status: true,
+        category: {
+          select: {
+            color: true,
+          },
+        },
       },
     });
 
@@ -235,6 +242,7 @@ export async function createDailyPlanItemWithHistory(
       startsAt: data.startsAt,
       endsAt: data.endsAt,
       notes: data.notes,
+      categoryColor: task.category?.color ?? null,
     };
   });
 }
@@ -335,6 +343,7 @@ export async function rescheduleDailyPlanItemWithHistory(
       select: {
         id: true,
         status: true,
+        routineScheduleId: true,
         plannedDate: true,
         startsAt: true,
         endsAt: true,
@@ -344,6 +353,11 @@ export async function rescheduleDailyPlanItemWithHistory(
           select: {
             id: true,
             title: true,
+            category: {
+              select: {
+                color: true,
+              },
+            },
           },
         },
       },
@@ -425,6 +439,11 @@ export async function rescheduleDailyPlanItemWithHistory(
         startsAt: data.startsAt,
         endsAt: data.endsAt,
         notes: data.notes,
+        ...(item.routineScheduleId
+          ? {
+              isRoutineException: true,
+            }
+          : {}),
         ...(item.googleCalendarEventId
           ? {
               calendarSyncStatus: "PENDING" as const,
@@ -478,6 +497,7 @@ export async function rescheduleDailyPlanItemWithHistory(
             startsAt: data.startsAt,
             endsAt: data.endsAt,
             notes: data.notes,
+            categoryColor: item.task.category?.color ?? null,
           }
         : null,
     };
@@ -501,6 +521,8 @@ export async function changeDailyPlanItemStatusWithHistory(
         startsAt: true,
         endsAt: true,
         googleCalendarEventId: true,
+        routineScheduleId: true,
+        routineOccurrenceDate: true,
 
         task: {
           select: {
@@ -529,6 +551,23 @@ export async function changeDailyPlanItemStatusWithHistory(
 
       if (!removal.success) {
         return removal;
+      }
+
+      if (item.routineScheduleId && item.routineOccurrenceDate) {
+        await transaction.routineOccurrenceExclusion.upsert({
+          where: {
+            routineScheduleId_occurrenceDate: {
+              routineScheduleId: item.routineScheduleId,
+              occurrenceDate: item.routineOccurrenceDate,
+            },
+          },
+          create: {
+            userId: data.userId,
+            routineScheduleId: item.routineScheduleId,
+            occurrenceDate: item.routineOccurrenceDate,
+          },
+          update: {},
+        });
       }
 
       const deleteResult = await transaction.dailyPlanItem.deleteMany({

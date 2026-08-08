@@ -76,6 +76,8 @@ está en `docs/scope.md`.
 
 ## Documentación
 
+- [Rutinas, generación automática y Calendar](docs/routines.md)
+
 - Visión aprobada: `docs/vision.md`.
 - Alcance del MVP: `docs/scope.md`.
 - Arquitectura aprobada: `docs/architecture.md`.

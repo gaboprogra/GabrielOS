@@ -124,6 +124,10 @@ export default async function DailyPlanPage({
             <Link href="/projects" className="text-blue-700 hover:underline">
               Proyectos
             </Link>
+
+            <Link href="/routines" className="text-blue-700 hover:underline">
+              Rutinas
+            </Link>
           </nav>
 
           <div className="mt-5 flex flex-wrap items-end justify-between gap-5">

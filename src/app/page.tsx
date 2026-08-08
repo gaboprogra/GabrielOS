@@ -44,6 +44,12 @@ export default function Home() {
           >
             Abrir banco de tareas
           </Link>
+          <Link
+            href="/routines"
+            className="inline-flex rounded-xl border border-blue-600 px-5 py-3 font-semibold text-blue-700 transition hover:bg-blue-50"
+          >
+            Administrar rutinas
+          </Link>
         </section>
       </article>
     </main>

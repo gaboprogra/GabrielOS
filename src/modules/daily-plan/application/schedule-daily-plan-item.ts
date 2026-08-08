@@ -8,6 +8,7 @@ import {
   markCalendarSyncSucceeded,
 } from "../infrastructure/daily-plan-repository";
 import { createGoogleCalendarEvent } from "@/infrastructure/google-calendar/google-calendar-bridge";
+import { mapHexToGoogleCalendarColor } from "@/infrastructure/google-calendar/google-calendar-event-color";
 
 type ScheduleDailyPlanItemCommand = {
   userId: string;
@@ -87,6 +88,7 @@ export async function scheduleDailyPlanItem(
     endsAt: result.endsAt,
 
     notes: result.notes,
+    calendarColor: mapHexToGoogleCalendarColor(result.categoryColor),
   });
 
   if (!calendarResult.success) {

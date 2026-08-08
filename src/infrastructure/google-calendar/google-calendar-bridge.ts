@@ -1,11 +1,14 @@
 import "server-only";
 
+import type { GoogleCalendarEventColor } from "./google-calendar-event-color";
+
 type CreateCalendarEventInput = {
   dailyPlanItemId: string;
   title: string;
   startsAt: Date;
   endsAt: Date;
   notes: string | null;
+  calendarColor: GoogleCalendarEventColor | null;
 };
 
 type CreateCalendarEventResult =
@@ -37,6 +40,7 @@ type UpdateCalendarEventInput = {
   startsAt: Date;
   endsAt: Date;
   notes: string | null;
+  calendarColor: GoogleCalendarEventColor | null;
 };
 
 type UpdateCalendarEventResult =
@@ -81,6 +85,7 @@ export async function createGoogleCalendarEvent(
         endsAt: input.endsAt.toISOString(),
 
         notes: input.notes,
+        calendarColor: input.calendarColor,
       }),
 
       cache: "no-store",
@@ -227,6 +232,7 @@ export async function updateGoogleCalendarEvent(
         startsAt: input.startsAt.toISOString(),
         endsAt: input.endsAt.toISOString(),
         notes: input.notes,
+        calendarColor: input.calendarColor,
       }),
       cache: "no-store",
     });

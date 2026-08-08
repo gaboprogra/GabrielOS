@@ -72,17 +72,29 @@ enum CalendarSyncStatus {
   FAILED
 }
 
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
 model User {
   id       String @id @default(cuid())
   email    String @unique
   name     String
   timezone String @default("America/La_Paz")
 
-  categories     Category[]
-  projects       Project[]
-  tasks          Task[]
-  dailyPlanItems DailyPlanItem[]
-  historyEntries HistoryEntry[]
+  categories                  Category[]
+  projects                    Project[]
+  tasks                       Task[]
+  dailyPlanItems              DailyPlanItem[]
+  historyEntries              HistoryEntry[]
+  routines                    Routine[]
+  routineOccurrenceExclusions RoutineOccurrenceExclusion[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -154,6 +166,7 @@ model Task {
   category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   project        Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
   dailyPlanItems DailyPlanItem[]
+  routines       Routine[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -166,9 +179,10 @@ model Task {
 }
 
 model DailyPlanItem {
-  id     String @id @default(cuid())
-  userId String
-  taskId String
+  id                String  @id @default(cuid())
+  userId            String
+  taskId            String
+  routineScheduleId String?
 
   plannedDate DateTime @db.Date
   startsAt    DateTime
@@ -178,12 +192,16 @@ model DailyPlanItem {
   position Int                 @default(0)
   notes    String?             @db.Text
 
+  routineOccurrenceDate DateTime? @db.Date
+  isRoutineException    Boolean   @default(false)
+
   completedAt DateTime?
   skippedAt   DateTime?
   cancelledAt DateTime?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task            Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  routineSchedule RoutineSchedule? @relation(fields: [routineScheduleId], references: [id], onDelete: SetNull)
 
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
@@ -192,9 +210,66 @@ model DailyPlanItem {
   calendarSyncError     String?            @db.Text
   calendarSyncedAt      DateTime?
 
+  @@unique([routineScheduleId, routineOccurrenceDate])
   @@index([userId, plannedDate, status])
   @@index([userId, startsAt])
   @@index([taskId])
+  @@index([routineScheduleId])
+}
+
+model Routine {
+  id     String @id @default(cuid())
+  userId String
+  taskId String
+
+  startDate DateTime  @db.Date
+  endDate   DateTime? @db.Date
+  isActive  Boolean   @default(true)
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task              @relation(fields: [taskId], references: [id], onDelete: Restrict)
+  schedules RoutineSchedule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, isActive, startDate, endDate])
+  @@index([taskId])
+}
+
+model RoutineSchedule {
+  id        String @id @default(cuid())
+  routineId String
+
+  dayOfWeek DayOfWeek
+  startTime String    @db.VarChar(5)
+  endTime   String    @db.VarChar(5)
+  isActive  Boolean   @default(true)
+
+  routine              Routine                      @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  dailyPlanItems       DailyPlanItem[]
+  occurrenceExclusions RoutineOccurrenceExclusion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([routineId, dayOfWeek])
+  @@index([routineId, isActive])
+}
+
+model RoutineOccurrenceExclusion {
+  id                String   @id @default(cuid())
+  userId            String
+  routineScheduleId String
+  occurrenceDate    DateTime @db.Date
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  routineSchedule RoutineSchedule @relation(fields: [routineScheduleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([routineScheduleId, occurrenceDate])
+  @@index([userId, occurrenceDate])
 }
 
 model HistoryEntry {

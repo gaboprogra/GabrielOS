@@ -1,4 +1,5 @@
 import { updateGoogleCalendarEvent } from "@/infrastructure/google-calendar/google-calendar-bridge";
+import { mapHexToGoogleCalendarColor } from "@/infrastructure/google-calendar/google-calendar-event-color";
 import { parseBoliviaDateTime } from "@/shared/domain/bolivia-date-time";
 import { parseDateInput } from "@/shared/domain/date-input";
 
@@ -87,9 +88,12 @@ export async function rescheduleDailyPlanItem(
     };
   }
 
-  const calendarResult = await updateGoogleCalendarEvent(
-    result.calendarEventUpdate,
-  );
+  const calendarResult = await updateGoogleCalendarEvent({
+    ...result.calendarEventUpdate,
+    calendarColor: mapHexToGoogleCalendarColor(
+      result.calendarEventUpdate.categoryColor,
+    ),
+  });
 
   if (!calendarResult.success) {
     await markCalendarEventUpdateFailed(
