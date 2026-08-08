@@ -9,7 +9,7 @@ import { ThemeSelector } from "./theme-selector";
 type IconName = "home" | "today" | "tasks" | "routines" | "projects" | "categories" | "more";
 
 const navigation = [
-  { href: "/", label: "Inicio", icon: "home" as const },
+  { href: "/", label: "Dashboard", icon: "home" as const },
   { href: "/daily-plan", label: "Hoy", icon: "today" as const },
   { href: "/tasks", label: "Tareas", icon: "tasks" as const },
   { href: "/routines", label: "Rutinas", icon: "routines" as const },

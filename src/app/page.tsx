@@ -1,100 +1,101 @@
-import Link from "next/link";
+import { getDashboard } from "@/modules/dashboard/application/get-dashboard";
+import { humanizeDuration } from "@/modules/dashboard/domain/dashboard-metrics";
+import {
+  CategoryActivityList,
+  ProjectActivityList,
+  WeeklyStatusSummary,
+} from "@/modules/dashboard/presentation/dashboard-activity-lists";
+import { DashboardMetricCard } from "@/modules/dashboard/presentation/dashboard-metric-card";
+import { NextActivityCard } from "@/modules/dashboard/presentation/next-activity-card";
+import { WeeklyCompletionChart } from "@/modules/dashboard/presentation/weekly-completion-chart";
+import { getCurrentDevelopmentUserId } from "@/shared/infrastructure/get-current-development-user";
+import { parseDateInput } from "@/shared/domain/date-input";
 
-const destinations = [
-  {
-    href: "/daily-plan",
-    label: "Plan diario",
-    description: "Organiza el día, revisa horarios y registra tu avance.",
-    accent: "primary",
-  },
-  {
-    href: "/tasks",
-    label: "Banco de tareas",
-    description: "Captura pendientes y mantén disponibles tus tareas reutilizables.",
-    accent: "info",
-  },
-  {
-    href: "/routines",
-    label: "Rutinas",
-    description: "Administra reglas recurrentes y sus horarios semanales.",
-    accent: "violet",
-  },
-  {
-    href: "/projects",
-    label: "Proyectos",
-    description: "Agrupa el trabajo y consulta su estado sin perder contexto.",
-    accent: "warning",
-  },
-  {
-    href: "/categories",
-    label: "Categorías",
-    description: "Conserva una clasificación visual propia para tus actividades.",
-    accent: "success",
-  },
-] as const;
+export const dynamic = "force-dynamic";
 
-export default function Home() {
+const readableDateFormatter = new Intl.DateTimeFormat("es-BO", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+});
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+export default async function Home() {
+  const userId = await getCurrentDevelopmentUserId();
+  const dashboard = await getDashboard(userId);
+  const today = parseDateInput(dashboard.today);
+  const readableDate = today
+    ? capitalize(readableDateFormatter.format(today))
+    : dashboard.today;
+  const { todayMetrics } = dashboard;
+
   return (
-    <main className="min-h-screen px-5 py-10">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-8 max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">
-            Espacio personal
-          </p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">
-            Todo lo importante, en un lugar tranquilo.
+    <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-7 sm:mb-8">
+          <p className="text-sm font-semibold text-[var(--primary)]">Dashboard</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
+            {dashboard.greeting}, {dashboard.userName}
           </h1>
-          <p className="mt-4 text-lg leading-8 text-slate-600">
-            GabrielOS reúne tu plan, tareas, rutinas y proyectos para que puedas
-            concentrarte en hacer, no en organizar la herramienta.
+          <p className="mt-1 text-sm capitalize text-[var(--foreground-secondary)] sm:text-base">
+            {readableDate}
           </p>
         </header>
 
-        <section className="ui-card overflow-hidden p-6 sm:p-8">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Comienza por aquí</p>
-              <h2 className="mt-1 text-2xl font-semibold text-slate-950">
-                Revisa el plan de hoy
-              </h2>
-              <p className="mt-2 max-w-xl text-slate-600">
-                Consulta las actividades programadas, sus horarios y el estado
-                de cada ejecución.
-              </p>
-            </div>
-            <Link href="/daily-plan" className="ui-button-primary shrink-0">
-              Abrir plan diario →
-            </Link>
+        <section aria-labelledby="today-title">
+          <h2 id="today-title" className="mb-3 text-lg font-semibold text-[var(--foreground)]">
+            Hoy
+          </h2>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 sm:gap-4">
+            <DashboardMetricCard
+              label="Actividades"
+              value={
+                todayMetrics.eligible === 0
+                  ? "Sin plan"
+                  : `${todayMetrics.completed} / ${todayMetrics.eligible}`
+              }
+              detail={todayMetrics.eligible === 0 ? undefined : "completadas"}
+            />
+            <DashboardMetricCard
+              label="Cumplimiento"
+              value={
+                todayMetrics.completionPercentage === null
+                  ? "—"
+                  : `${todayMetrics.completionPercentage}%`
+              }
+              detail={todayMetrics.completionPercentage === null ? "Sin plan" : undefined}
+            />
+            <DashboardMetricCard
+              label="Tiempo planificado"
+              value={humanizeDuration(todayMetrics.plannedMinutes)}
+            />
+            <DashboardMetricCard
+              label="Tiempo completado"
+              value={humanizeDuration(todayMetrics.completedMinutes)}
+            />
           </div>
         </section>
 
-        <section className="mt-8">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <h2 className="text-xl font-semibold text-slate-950">Tu espacio</h2>
-            <span className="text-sm text-slate-500">GabrielOS</span>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {destinations.slice(1).map((destination) => (
-              <Link
-                key={destination.href}
-                href={destination.href}
-                className="ui-card group block p-5 transition hover:-translate-y-0.5"
-                data-accent={destination.accent}
-              >
-                <span className="mb-5 block h-1.5 w-10 rounded-full bg-blue-600" />
-                <h3 className="font-semibold text-slate-950 group-hover:text-blue-700">
-                  {destination.label}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {destination.description}
-                </p>
-                <span className="mt-5 inline-block text-sm font-semibold text-blue-700">
-                  Abrir →
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <NextActivityCard
+            activity={dashboard.currentOrNextActivity}
+            today={dashboard.today}
+          />
+          <WeeklyCompletionChart days={dashboard.weeklyCompletion} />
+        </div>
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+          <WeeklyStatusSummary {...dashboard.weeklyStatuses} />
+          <CategoryActivityList items={dashboard.categories} />
+        </div>
+
+        <div className="mt-5">
+          <ProjectActivityList items={dashboard.projects} />
+        </div>
       </div>
     </main>
   );
