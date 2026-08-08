@@ -100,14 +100,14 @@ export function EditProjectForm({ project }: EditProjectFormProps) {
       <div className="flex gap-3">
         <button
           disabled={isPending}
-          className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white disabled:opacity-50"
+          className="ui-button-primary disabled:opacity-50"
         >
           {isPending ? "Guardando..." : "Guardar cambios"}
         </button>
 
         <Link
           href="/projects"
-          className="rounded-xl border border-slate-300 px-5 py-3 font-semibold"
+          className="ui-button-secondary"
         >
           Volver
         </Link>

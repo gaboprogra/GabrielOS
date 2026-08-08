@@ -11,7 +11,7 @@ export default async function ArchivedTasksPage() {
   const archivedTasks = await listArchivedTasks(userId);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
+    <main className="min-h-screen px-5 py-10">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8">
           <nav className="flex flex-wrap gap-4 text-sm font-medium">
@@ -41,9 +41,9 @@ export default async function ArchivedTasksPage() {
           </div>
         </header>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="ui-card p-6">
           {archivedTasks.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-slate-300 px-5 py-8 text-center text-sm text-slate-500">
+            <p className="ui-empty px-5 py-8 text-center text-sm">
               No existen tareas archivadas.
             </p>
           ) : (

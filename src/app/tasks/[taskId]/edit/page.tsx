@@ -31,7 +31,7 @@ export default async function EditTaskPage({ params }: EditTaskPageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
+    <main className="min-h-screen px-5 py-10">
       <div className="mx-auto max-w-3xl">
         <header className="mb-8">
           <Link
@@ -50,7 +50,7 @@ export default async function EditTaskPage({ params }: EditTaskPageProps) {
           </p>
         </header>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <section className="ui-card p-6 sm:p-8">
           <EditTaskForm
             task={{
               id: task.id,

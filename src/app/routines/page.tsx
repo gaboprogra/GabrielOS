@@ -40,11 +40,20 @@ export default async function RoutinesPage() {
     );
 
     return (
-      <li key={routine.id} className="rounded-xl border border-slate-200 p-5">
+      <li key={routine.id} className="activity-card rounded-xl border border-slate-200 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-3">
-              <h3 className="font-semibold text-slate-950">{routine.task.title}</h3>
+              <h3 className="flex items-center gap-2 font-semibold text-slate-950">
+                {routine.task.category?.color ? (
+                  <span
+                    aria-hidden="true"
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: routine.task.category.color }}
+                  />
+                ) : null}
+                {routine.task.title}
+              </h3>
               <Link href={`/routines/${routine.id}/edit`} className="text-sm font-medium text-blue-700 hover:underline">
                 Editar
               </Link>
@@ -75,7 +84,7 @@ export default async function RoutinesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
+    <main className="min-h-screen px-5 py-10">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8">
           <nav className="flex flex-wrap gap-4 text-sm font-medium">
@@ -88,10 +97,10 @@ export default async function RoutinesPage() {
         </header>
 
         <div className="grid gap-8 xl:grid-cols-[440px_1fr]">
-          <section className="self-start rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="ui-card self-start p-6">
             <h2 className="mb-5 text-xl font-semibold text-slate-950">Nueva rutina</h2>
             {tasks.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-slate-300 p-5 text-sm text-slate-600">
+              <p className="ui-empty p-5 text-sm">
                 Crea primero una tarea reutilizable no archivada.
               </p>
             ) : (
@@ -100,16 +109,16 @@ export default async function RoutinesPage() {
           </section>
 
           <div className="space-y-8">
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="ui-card p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <h2 className="text-xl font-semibold text-slate-950">Rutinas activas</h2>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">{activeRoutines.length}</span>
               </div>
-              {activeRoutines.length ? <ul className="space-y-4">{activeRoutines.map(renderRoutine)}</ul> : <p className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">No hay rutinas activas.</p>}
+              {activeRoutines.length ? <ul className="space-y-4">{activeRoutines.map(renderRoutine)}</ul> : <p className="ui-empty p-8 text-center text-sm">No hay rutinas activas.</p>}
             </section>
 
             {inactiveRoutines.length ? (
-              <details className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <details className="ui-card p-6">
                 <summary className="cursor-pointer text-xl font-semibold text-slate-950">Rutinas inactivas ({inactiveRoutines.length})</summary>
                 <ul className="mt-5 space-y-4">{inactiveRoutines.map(renderRoutine)}</ul>
               </details>

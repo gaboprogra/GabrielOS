@@ -153,7 +153,7 @@ export function ScheduleDailyPlanItemForm({
       <button
         type="submit"
         disabled={isPending || tasks.length === 0}
-        className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="ui-button-primary w-full disabled:opacity-50"
       >
         {isPending ? "Programando..." : "Agregar al plan diario"}
       </button>

@@ -24,14 +24,14 @@ export default async function EditRoutinePage(props: {
   if (!routine) notFound();
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
+    <main className="min-h-screen px-5 py-10">
       <div className="mx-auto max-w-3xl">
         <header className="mb-8">
           <Link href="/routines" className="text-sm font-medium text-blue-700 hover:underline">← Volver a rutinas</Link>
           <h1 className="mt-4 text-3xl font-bold text-slate-950">Editar rutina</h1>
           <p className="mt-2 text-slate-600">Los cambios permanentes se aplican solo a ocurrencias futuras planificadas dentro de la ventana activa.</p>
         </header>
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <section className="ui-card p-6 sm:p-8">
           <RoutineForm
             tasks={tasks}
             defaultStartDate={formatDateInput(routine.startDate)}

@@ -191,11 +191,11 @@ export function RoutineForm({ tasks, routine, defaultStartDate }: RoutineFormPro
       ) : null}
 
       <div className="flex flex-wrap gap-3">
-        <button type="submit" disabled={isPending} className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+        <button type="submit" disabled={isPending} className="ui-button-primary disabled:opacity-50">
           {isPending ? "Guardando..." : routine ? "Guardar cambios" : "Crear rutina"}
         </button>
         {routine ? (
-          <Link href="/routines" className="rounded-xl border border-slate-300 px-5 py-3 font-medium text-slate-700 hover:bg-slate-50">
+          <Link href="/routines" className="ui-button-secondary">
             Cancelar
           </Link>
         ) : null}

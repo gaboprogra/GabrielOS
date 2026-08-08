@@ -18,7 +18,7 @@ export default async function CategoriesPage() {
   ]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
+    <main className="min-h-screen px-5 py-10">
       <div className="mx-auto max-w-5xl">
         <header className="mb-8">
           <Link
@@ -39,7 +39,7 @@ export default async function CategoriesPage() {
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="ui-card p-6">
             <h2 className="mb-5 text-xl font-semibold text-slate-950">
               Nueva categoría
             </h2>
@@ -47,7 +47,7 @@ export default async function CategoriesPage() {
             <CategoryForm />
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="ui-card p-6">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-950">
                 Categorías registradas
@@ -59,7 +59,7 @@ export default async function CategoriesPage() {
             </div>
 
             {categories.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-300 px-6 py-12 text-center">
+              <div className="ui-empty px-6 py-12 text-center">
                 <p className="font-medium text-slate-700">
                   Todavía no existen categorías.
                 </p>
@@ -73,7 +73,7 @@ export default async function CategoriesPage() {
                 {categories.map((category) => (
                   <li
                     key={category.id}
-                    className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 px-4 py-4"
+                    className="activity-card flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 px-4 py-4"
                   >
                     <div className="flex items-center gap-4">
                       <span

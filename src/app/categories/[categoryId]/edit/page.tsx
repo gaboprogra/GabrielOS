@@ -26,7 +26,7 @@ export default async function EditCategoryPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
+    <main className="min-h-screen px-5 py-10">
       <div className="mx-auto max-w-2xl">
         <Link
           href="/categories"
@@ -39,7 +39,7 @@ export default async function EditCategoryPage({
           Editar categoría
         </h1>
 
-        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="ui-card mt-8 p-6">
           <EditCategoryForm category={category} />
         </section>
       </div>

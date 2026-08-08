@@ -225,7 +225,7 @@ export function TaskForm({ categories, projects }: TaskFormProps) {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="ui-button-primary w-full disabled:opacity-60"
       >
         {isPending ? "Guardando..." : "Crear tarea"}
       </button>

@@ -30,7 +30,7 @@ export default async function EditProjectPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
+    <main className="min-h-screen px-5 py-10">
       <div className="mx-auto max-w-2xl">
         <Link href="/projects" className="text-sm font-medium text-blue-700">
           ← Volver a proyectos
@@ -38,7 +38,7 @@ export default async function EditProjectPage({
 
         <h1 className="mt-4 text-3xl font-bold">Editar proyecto</h1>
 
-        <section className="mt-8 rounded-2xl border bg-white p-6 shadow-sm">
+        <section className="ui-card mt-8 p-6">
           <EditProjectForm
             project={{
               id: project.id,

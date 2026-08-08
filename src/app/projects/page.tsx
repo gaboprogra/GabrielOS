@@ -32,6 +32,16 @@ function getStatusLabel(status: string): string {
   return labels[status] ?? status;
 }
 
+function getStatusClassName(status: string): string {
+  const classes: Record<string, string> = {
+    ACTIVE: "ui-action-primary",
+    COMPLETED: "ui-action-success",
+    ARCHIVED: "ui-action-secondary",
+  };
+
+  return classes[status] ?? "ui-action-secondary";
+}
+
 export default async function ProjectsPage() {
   const userId = await getCurrentDevelopmentUserId();
   const [projects, archivedProjects] = await Promise.all([
@@ -40,7 +50,7 @@ export default async function ProjectsPage() {
   ]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
+    <main className="min-h-screen px-5 py-10">
       <div className="mx-auto max-w-6xl">
         <header className="mb-8">
           <nav className="flex flex-wrap gap-4 text-sm font-medium">
@@ -63,7 +73,7 @@ export default async function ProjectsPage() {
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
-          <section className="self-start rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="ui-card self-start p-6">
             <h2 className="mb-5 text-xl font-semibold text-slate-950">
               Nuevo proyecto
             </h2>
@@ -71,7 +81,7 @@ export default async function ProjectsPage() {
             <ProjectForm />
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="ui-card p-6">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-950">
                 Proyectos registrados
@@ -83,7 +93,7 @@ export default async function ProjectsPage() {
             </div>
 
             {projects.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-300 px-6 py-12 text-center">
+              <div className="ui-empty px-6 py-12 text-center">
                 <p className="font-medium text-slate-700">
                   Todavía no existen proyectos.
                 </p>
@@ -97,7 +107,7 @@ export default async function ProjectsPage() {
                 {projects.map((project) => (
                   <li
                     key={project.id}
-                    className="rounded-xl border border-slate-200 p-5"
+                    className="activity-card rounded-xl border border-slate-200 p-5"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -125,7 +135,7 @@ export default async function ProjectsPage() {
                         ) : null}
                       </div>
 
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClassName(project.status)}`}>
                         {getStatusLabel(project.status)}
                       </span>
                     </div>
@@ -149,7 +159,7 @@ export default async function ProjectsPage() {
                 ))}
               </ul>
             )}
-            <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="ui-card mt-8 p-6">
               <h2 className="text-xl font-semibold">Proyectos archivados</h2>
 
               {archivedProjects.length === 0 ? (

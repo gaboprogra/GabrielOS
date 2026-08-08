@@ -238,14 +238,14 @@ export function EditTaskForm({
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+          className="ui-button-primary disabled:opacity-50"
         >
           {isPending ? "Guardando..." : "Guardar cambios"}
         </button>
 
         <Link
           href="/tasks"
-          className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+          className="ui-button-secondary"
         >
           Volver sin guardar
         </Link>

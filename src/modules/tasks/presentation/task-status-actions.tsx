@@ -29,17 +29,17 @@ function getAvailableActions(
       {
         action: "START",
         label: "Iniciar",
-        className: "bg-amber-100 text-amber-800 hover:bg-amber-200",
+        className: "ui-action-warning",
       },
       {
         action: "COMPLETE",
         label: "Completar",
-        className: "bg-green-100 text-green-800 hover:bg-green-200",
+        className: "ui-action-success",
       },
       {
         action: "ARCHIVE",
         label: "Archivar",
-        className: "bg-slate-100 text-slate-700 hover:bg-slate-200",
+        className: "ui-action-secondary",
       },
     ];
   }
@@ -49,12 +49,12 @@ function getAvailableActions(
       {
         action: "COMPLETE",
         label: "Completar",
-        className: "bg-green-100 text-green-800 hover:bg-green-200",
+        className: "ui-action-success",
       },
       {
         action: "ARCHIVE",
         label: "Archivar",
-        className: "bg-slate-100 text-slate-700 hover:bg-slate-200",
+        className: "ui-action-secondary",
       },
     ];
   }
@@ -64,7 +64,7 @@ function getAvailableActions(
       {
         action: "ARCHIVE",
         label: "Archivar",
-        className: "bg-slate-100 text-slate-700 hover:bg-slate-200",
+        className: "ui-action-secondary",
       },
     ];
   }
@@ -73,7 +73,7 @@ function getAvailableActions(
     {
       action: "RESTORE",
       label: "Restaurar",
-      className: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+      className: "ui-action-primary",
     },
   ];
 }

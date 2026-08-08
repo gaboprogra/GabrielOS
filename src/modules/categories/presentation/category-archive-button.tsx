@@ -32,8 +32,8 @@ export function CategoryArchiveButton({
           disabled={isPending}
           className={
             isArchived
-              ? "rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-800 hover:bg-blue-200 disabled:opacity-50"
-              : "rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+              ? "ui-action-primary rounded-lg px-3 py-2 text-sm font-medium disabled:opacity-50"
+              : "ui-action-secondary rounded-lg px-3 py-2 text-sm font-medium disabled:opacity-50"
           }
         >
           {isPending ? "Procesando..." : isArchived ? "Restaurar" : "Archivar"}

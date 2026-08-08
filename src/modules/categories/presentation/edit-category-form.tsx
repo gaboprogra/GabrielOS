@@ -77,14 +77,14 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
       <div className="flex gap-3">
         <button
           disabled={isPending}
-          className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white disabled:opacity-50"
+          className="ui-button-primary disabled:opacity-50"
         >
           {isPending ? "Guardando..." : "Guardar cambios"}
         </button>
 
         <Link
           href="/categories"
-          className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700"
+          className="ui-button-secondary"
         >
           Volver
         </Link>

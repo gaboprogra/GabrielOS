@@ -29,27 +29,27 @@ function getAvailableActions(status: DailyPlanItemStatus): ActionDefinition[] {
       {
         action: "START",
         label: "Iniciar",
-        className: "bg-amber-100 text-amber-800 hover:bg-amber-200",
+        className: "ui-action-warning",
       },
       {
         action: "COMPLETE",
         label: "Completar",
-        className: "bg-green-100 text-green-800 hover:bg-green-200",
+        className: "ui-action-success",
       },
       {
         action: "SKIP",
         label: "Omitir",
-        className: "bg-violet-100 text-violet-800 hover:bg-violet-200",
+        className: "ui-action-violet",
       },
       {
         action: "CANCEL",
         label: "Cancelar",
-        className: "bg-slate-100 text-slate-700 hover:bg-slate-200",
+        className: "ui-action-secondary",
       },
       {
         action: "REMOVE",
         label: "Quitar del plan",
-        className: "bg-red-50 text-red-700 hover:bg-red-100",
+        className: "ui-action-danger",
       },
     ];
   }
@@ -59,22 +59,22 @@ function getAvailableActions(status: DailyPlanItemStatus): ActionDefinition[] {
       {
         action: "COMPLETE",
         label: "Completar",
-        className: "bg-green-100 text-green-800 hover:bg-green-200",
+        className: "ui-action-success",
       },
       {
         action: "SKIP",
         label: "Omitir",
-        className: "bg-violet-100 text-violet-800 hover:bg-violet-200",
+        className: "ui-action-violet",
       },
       {
         action: "CANCEL",
         label: "Cancelar",
-        className: "bg-slate-100 text-slate-700 hover:bg-slate-200",
+        className: "ui-action-secondary",
       },
       {
         action: "REMOVE",
         label: "Quitar del plan",
-        className: "bg-red-50 text-red-700 hover:bg-red-100",
+        className: "ui-action-danger",
       },
     ];
   }
@@ -84,7 +84,7 @@ function getAvailableActions(status: DailyPlanItemStatus): ActionDefinition[] {
       {
         action: "REMOVE",
         label: "Quitar del plan",
-        className: "bg-red-50 text-red-700 hover:bg-red-100",
+        className: "ui-action-danger",
       },
     ];
   }
@@ -113,7 +113,7 @@ export function DailyPlanItemActions({
         {status === "PLANNED" ? (
           <Link
             href={`/daily-plan/${dailyPlanItemId}/edit`}
-            className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+            className="ui-action-primary rounded-lg px-3 py-2 text-sm font-medium transition"
           >
             Reprogramar
           </Link>

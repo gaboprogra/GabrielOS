@@ -55,14 +55,14 @@ function getDurationMinutes(startsAt: Date, endsAt: Date): number {
 }
 function getStatusClassName(status: string): string {
   const classes: Record<string, string> = {
-    PLANNED: "bg-blue-50 text-blue-700",
-    IN_PROGRESS: "bg-amber-50 text-amber-700",
-    COMPLETED: "bg-green-50 text-green-700",
-    SKIPPED: "bg-violet-50 text-violet-700",
-    CANCELLED: "bg-slate-100 text-slate-500",
+    PLANNED: "ui-action-primary",
+    IN_PROGRESS: "ui-action-warning",
+    COMPLETED: "ui-action-success",
+    SKIPPED: "ui-action-violet",
+    CANCELLED: "ui-action-secondary",
   };
 
-  return classes[status] ?? "bg-slate-100 text-slate-700";
+  return classes[status] ?? "ui-action-secondary";
 }
 
 export default async function DailyPlanPage({
@@ -109,7 +109,7 @@ export default async function DailyPlanPage({
     );
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
+    <main className="min-h-screen px-5 py-10">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8">
           <nav className="flex flex-wrap gap-4 text-sm font-medium">
@@ -148,11 +148,11 @@ export default async function DailyPlanPage({
           </div>
         </header>
 
-        <section className="mb-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="day-navigation ui-card mb-8 p-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <Link
               href={`/daily-plan?date=${previousDate}`}
-              className="rounded-xl border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-50"
+              className="ui-button-secondary"
             >
               ← Día anterior
             </Link>
@@ -172,7 +172,7 @@ export default async function DailyPlanPage({
 
               <button
                 type="submit"
-                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+                className="ui-button-primary"
               >
                 Ir
               </button>
@@ -180,7 +180,7 @@ export default async function DailyPlanPage({
 
             <Link
               href={`/daily-plan?date=${nextDate}`}
-              className="rounded-xl border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-50"
+              className="ui-button-secondary"
             >
               Día siguiente →
             </Link>
@@ -188,7 +188,7 @@ export default async function DailyPlanPage({
         </section>
 
         <section className="mb-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="stat-card ui-card p-5">
             <p className="text-sm text-slate-500">Actividades</p>
 
             <p className="mt-2 text-3xl font-bold text-slate-950">
@@ -196,7 +196,7 @@ export default async function DailyPlanPage({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="stat-card ui-card p-5">
             <p className="text-sm text-slate-500">Pendientes</p>
 
             <p className="mt-2 text-3xl font-bold text-amber-700">
@@ -204,7 +204,7 @@ export default async function DailyPlanPage({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="stat-card ui-card p-5">
             <p className="text-sm text-slate-500">Completadas</p>
 
             <p className="mt-2 text-3xl font-bold text-green-700">
@@ -214,7 +214,7 @@ export default async function DailyPlanPage({
         </section>
 
         <div className="grid gap-8 xl:grid-cols-[1fr_400px]">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="ui-card p-6">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-slate-950">Agenda</h2>
@@ -232,7 +232,7 @@ export default async function DailyPlanPage({
             </div>
 
             {planItems.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-300 px-6 py-16 text-center">
+              <div className="ui-empty px-6 py-16 text-center">
                 <p className="font-medium text-slate-700">
                   No tienes actividades programadas para este día.
                 </p>
@@ -246,7 +246,7 @@ export default async function DailyPlanPage({
                 {planItems.map((item) => (
                   <li
                     key={item.id}
-                    className="rounded-2xl border border-slate-200 p-5"
+                    className="activity-card rounded-2xl border border-slate-200 p-5"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="flex gap-4">
@@ -331,7 +331,7 @@ export default async function DailyPlanPage({
             )}
           </section>
 
-          <aside className="self-start rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <aside className="ui-card self-start p-6">
             <h2 className="text-xl font-semibold text-slate-950">
               Programar tarea
             </h2>
@@ -341,7 +341,7 @@ export default async function DailyPlanPage({
             </p>
 
             {tasks.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center">
+              <div className="ui-empty p-6 text-center">
                 <p className="font-medium text-slate-700">
                   No tienes tareas disponibles.
                 </p>
