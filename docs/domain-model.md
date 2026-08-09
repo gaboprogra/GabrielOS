@@ -112,7 +112,9 @@ Transiciones admitidas de `DailyPlanItem` durante el MVP:
 - `PLANNED` puede pasar a `IN_PROGRESS`, `COMPLETED`, `SKIPPED` o `CANCELLED`.
 - `IN_PROGRESS` puede pasar a `COMPLETED`, `SKIPPED` o `CANCELLED`.
 - `SKIPPED` puede pasar a `CANCELLED`.
-- `COMPLETED` y `CANCELLED` son estados finales durante el MVP.
+- `IN_PROGRESS`, `COMPLETED`, `SKIPPED` y `CANCELLED` pueden volver a
+  `PLANNED` para corregir una acción accidental. Esta corrección conserva la
+  programación e identidad y limpia los timestamps incompatibles.
 
 ## Reglas temporales
 
@@ -133,13 +135,20 @@ no está completada, cancelada ni archivada. Aplicado a cada entidad:
 Reprogramar significa modificar la fecha o el horario de un `DailyPlanItem`
 conservando la identidad de la `Task` y del propio elemento del plan.
 
-Solo un elemento `PLANNED` puede reprogramarse. Reprogramar un elemento
-`IN_PROGRESS`, `COMPLETED`, `CANCELLED` o `SKIPPED` queda fuera del MVP.
+Un elemento `PLANNED` o `IN_PROGRESS` puede reprogramarse. Al reprogramar uno
+`IN_PROGRESS`, la misma ocurrencia vuelve a `PLANNED` y, para una Task
+`ONE_TIME`, la Task vuelve a `PENDING` cuando corresponda. `COMPLETED`,
+`CANCELLED` y `SKIPPED` deben restaurarse primero antes de reprogramarse.
 
 Cada reprogramación crea una `HistoryEntry` que registra, como mínimo, los
 valores temporales anteriores y nuevos. Si existe un `CalendarEvent`, el mismo
 evento externo se actualiza mediante su identificador; no se crea otro por el
 solo hecho de reprogramar.
+
+La programación manual y la reprogramación rechazan cruces con elementos
+`PLANNED` o `IN_PROGRESS`. Ante un conflicto pueden proponer el siguiente
+espacio disponible del mismo día, manteniendo la duración, pero sólo persisten
+el cambio después de una confirmación que vuelve a validar el horario.
 
 ## Archivado y recuperación
 

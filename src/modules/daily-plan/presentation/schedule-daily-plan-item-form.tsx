@@ -2,8 +2,8 @@
 
 import { useActionState } from "react";
 
-import { initialActionState } from "@/shared/application/action-state";
-
+import { initialDailyPlanFormActionState } from "./daily-plan-form-action-state";
+import { ScheduleConflictNotice } from "./schedule-conflict-notice";
 import { scheduleDailyPlanItemAction } from "./schedule-daily-plan-item-action";
 
 type TaskOption = {
@@ -30,7 +30,7 @@ export function ScheduleDailyPlanItemForm({
 }: ScheduleDailyPlanItemFormProps) {
   const [state, formAction, isPending] = useActionState(
     scheduleDailyPlanItemAction,
-    initialActionState,
+    initialDailyPlanFormActionState,
   );
 
   return (
@@ -137,7 +137,13 @@ export function ScheduleDailyPlanItemForm({
         />
       </div>
 
-      {state.message ? (
+      {state.status === "conflict" ? (
+        <ScheduleConflictNotice
+          conflict={state.conflict}
+          startInputId="plan-start-time"
+          endInputId="plan-end-time"
+        />
+      ) : state.message ? (
         <p
           aria-live="polite"
           className={

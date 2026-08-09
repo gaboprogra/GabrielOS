@@ -3,15 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import type { ActionState } from "@/shared/application/action-state";
 import { getCurrentDevelopmentUserId } from "@/shared/infrastructure/get-current-development-user";
 
 import { rescheduleDailyPlanItem } from "../application/reschedule-daily-plan-item";
+import {
+  toScheduleConflictActionState,
+  type DailyPlanFormActionState,
+} from "./daily-plan-form-action-state";
 
 export async function rescheduleDailyPlanItemAction(
-  _previousState: ActionState,
+  _previousState: DailyPlanFormActionState,
   formData: FormData,
-): Promise<ActionState> {
+): Promise<DailyPlanFormActionState> {
   let result: Awaited<ReturnType<typeof rescheduleDailyPlanItem>>;
 
   try {
@@ -35,6 +38,10 @@ export async function rescheduleDailyPlanItemAction(
   }
 
   if (!result.success) {
+    if (result.reason === "SCHEDULE_CONFLICT") {
+      return toScheduleConflictActionState(result.conflict);
+    }
+
     return {
       status: "error",
       message: result.error,

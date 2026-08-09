@@ -62,13 +62,15 @@ export function RoutineForm({ tasks, routine, defaultStartDate }: RoutineFormPro
     const nextDay = DAYS_OF_WEEK.find((day) => !usedDays.has(day));
     if (!nextDay) return;
 
+    const firstSchedule = schedules[0];
+
     setSchedules((current) => [
       ...current,
       {
         key: nextKey,
         dayOfWeek: nextDay,
-        startTime: "07:00",
-        endTime: "08:00",
+        startTime: firstSchedule?.startTime ?? "07:00",
+        endTime: firstSchedule?.endTime ?? "08:00",
       },
     ]);
     setNextKey((current) => current + 1);
@@ -143,32 +145,71 @@ export function RoutineForm({ tasks, routine, defaultStartDate }: RoutineFormPro
       <fieldset className="space-y-3">
         <legend className="text-sm font-medium text-slate-700">Horarios</legend>
         {schedules.map((schedule) => (
-          <div key={schedule.key} className="grid gap-3 rounded-xl border border-slate-200 p-3 sm:grid-cols-[1fr_120px_120px_auto]">
-            <select
-              name="dayOfWeek"
-              value={schedule.dayOfWeek}
-              onChange={(event) =>
-                setSchedules((current) =>
-                  current.map((row) =>
-                    row.key === schedule.key
-                      ? { ...row, dayOfWeek: event.target.value as DayOfWeek }
-                      : row,
-                  ),
-                )
-              }
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-950"
-            >
-              {DAYS_OF_WEEK.map((day) => (
-                <option key={day} value={day}>{DAY_OF_WEEK_LABELS[day]}</option>
-              ))}
-            </select>
-            <input type="time" name="startTime" required defaultValue={schedule.startTime} className="rounded-lg border border-slate-300 px-3 py-2 text-slate-950" />
-            <input type="time" name="endTime" required defaultValue={schedule.endTime} className="rounded-lg border border-slate-300 px-3 py-2 text-slate-950" />
+          <div key={schedule.key} className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 p-3">
+            <label className="col-span-2 min-w-0 space-y-1.5 text-xs font-medium text-slate-600">
+              <span className="block">Día</span>
+              <select
+                name="dayOfWeek"
+                value={schedule.dayOfWeek}
+                onChange={(event) =>
+                  setSchedules((current) =>
+                    current.map((row) =>
+                      row.key === schedule.key
+                        ? { ...row, dayOfWeek: event.target.value as DayOfWeek }
+                        : row,
+                    ),
+                  )
+                }
+                className="w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-950"
+              >
+                {DAYS_OF_WEEK.map((day) => (
+                  <option key={day} value={day}>{DAY_OF_WEEK_LABELS[day]}</option>
+                ))}
+              </select>
+            </label>
+            <label className="min-w-0 space-y-1.5 text-xs font-medium text-slate-600">
+              <span className="block">Hora inicial</span>
+              <input
+                type="time"
+                name="startTime"
+                required
+                value={schedule.startTime}
+                onChange={(event) =>
+                  setSchedules((current) =>
+                    current.map((row) =>
+                      row.key === schedule.key
+                        ? { ...row, startTime: event.target.value }
+                        : row,
+                    ),
+                  )
+                }
+                className="w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-slate-950"
+              />
+            </label>
+            <label className="min-w-0 space-y-1.5 text-xs font-medium text-slate-600">
+              <span className="block">Hora final</span>
+              <input
+                type="time"
+                name="endTime"
+                required
+                value={schedule.endTime}
+                onChange={(event) =>
+                  setSchedules((current) =>
+                    current.map((row) =>
+                      row.key === schedule.key
+                        ? { ...row, endTime: event.target.value }
+                        : row,
+                    ),
+                  )
+                }
+                className="w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-slate-950"
+              />
+            </label>
             <button
               type="button"
               disabled={schedules.length === 1}
               onClick={() => setSchedules((current) => current.filter((row) => row.key !== schedule.key))}
-              className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700 disabled:opacity-40"
+              className="col-span-2 self-end rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700 disabled:opacity-40"
             >
               Quitar
             </button>

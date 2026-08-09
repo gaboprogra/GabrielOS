@@ -4,6 +4,7 @@ import { parseBoliviaDateTime } from "@/shared/domain/bolivia-date-time";
 import { parseDateInput } from "@/shared/domain/date-input";
 
 import { rescheduleDailyPlanItemSchema } from "../domain/reschedule-daily-plan-item-schema";
+import type { ScheduleOperationFailure } from "../domain/schedule-conflict";
 import {
   markCalendarEventUpdateFailed,
   markCalendarEventUpdateSucceeded,
@@ -25,10 +26,7 @@ export type RescheduleDailyPlanItemResult =
       plannedDate: string;
       calendarSynced: boolean;
     }
-  | {
-      success: false;
-      error: string;
-    };
+  | ScheduleOperationFailure;
 
 export async function rescheduleDailyPlanItem(
   command: RescheduleDailyPlanItemCommand,
@@ -44,6 +42,7 @@ export async function rescheduleDailyPlanItem(
   if (!validation.success) {
     return {
       success: false,
+      reason: "ERROR",
       error:
         validation.error.issues[0]?.message ??
         "Los datos de la reprogramación no son válidos.",
@@ -57,10 +56,14 @@ export async function rescheduleDailyPlanItem(
   const endsAt = parseBoliviaDateTime(
     `${validation.data.plannedDate}T${validation.data.endTime}`,
   );
+  const latestEnd = parseBoliviaDateTime(
+    `${validation.data.plannedDate}T23:59`,
+  );
 
-  if (!plannedDate || !startsAt || !endsAt) {
+  if (!plannedDate || !startsAt || !endsAt || !latestEnd) {
     return {
       success: false,
+      reason: "ERROR",
       error: "No se pudo interpretar la fecha o el horario.",
     };
   }
@@ -71,6 +74,7 @@ export async function rescheduleDailyPlanItem(
     plannedDate,
     startsAt,
     endsAt,
+    latestEnd,
     notes: validation.data.notes,
   });
 

@@ -2,6 +2,7 @@ import { parseBoliviaDateTime } from "@/shared/domain/bolivia-date-time";
 import { parseDateInput } from "@/shared/domain/date-input";
 
 import { scheduleDailyPlanItemSchema } from "../domain/schedule-daily-plan-item-schema";
+import type { ScheduleOperationFailure } from "../domain/schedule-conflict";
 import {
   createDailyPlanItemWithHistory,
   markCalendarSyncFailed,
@@ -24,10 +25,7 @@ export type ScheduleDailyPlanItemResult =
       success: true;
       calendarSynced: boolean;
     }
-  | {
-      success: false;
-      error: string;
-    };
+  | ScheduleOperationFailure;
 
 export async function scheduleDailyPlanItem(
   command: ScheduleDailyPlanItemCommand,
@@ -43,6 +41,7 @@ export async function scheduleDailyPlanItem(
   if (!validation.success) {
     return {
       success: false,
+      reason: "ERROR",
       error:
         validation.error.issues[0]?.message ??
         "Los datos del horario no son válidos.",
@@ -58,10 +57,14 @@ export async function scheduleDailyPlanItem(
   const endsAt = parseBoliviaDateTime(
     `${validation.data.plannedDate}T${validation.data.endTime}`,
   );
+  const latestEnd = parseBoliviaDateTime(
+    `${validation.data.plannedDate}T23:59`,
+  );
 
-  if (!plannedDate || !startsAt || !endsAt) {
+  if (!plannedDate || !startsAt || !endsAt || !latestEnd) {
     return {
       success: false,
+      reason: "ERROR",
       error: "No se pudo interpretar la fecha o el horario.",
     };
   }
@@ -72,6 +75,7 @@ export async function scheduleDailyPlanItem(
     plannedDate,
     startsAt,
     endsAt,
+    latestEnd,
     notes: validation.data.notes,
   });
 

@@ -1,10 +1,19 @@
-import { deleteGoogleCalendarEvent } from "@/infrastructure/google-calendar/google-calendar-bridge";
+import {
+  createGoogleCalendarEvent,
+  deleteGoogleCalendarEvent,
+  updateGoogleCalendarEvent,
+} from "@/infrastructure/google-calendar/google-calendar-bridge";
+import { mapHexToGoogleCalendarColor } from "@/infrastructure/google-calendar/google-calendar-event-color";
 
 import { changeDailyPlanItemStatusSchema } from "../domain/change-daily-plan-item-status-schema";
 import {
   changeDailyPlanItemStatusWithHistory,
+  markCalendarEventUpdateFailed,
+  markCalendarEventUpdateSucceeded,
   markCalendarEventDeletionFailed,
   markCalendarEventDeletionSucceeded,
+  markCalendarSyncFailed,
+  markCalendarSyncSucceeded,
   recordRemovedItemCalendarSyncFailure,
 } from "../infrastructure/daily-plan-repository";
 
@@ -81,6 +90,63 @@ export async function changeDailyPlanItemStatus(
         command.userId,
         target.dailyPlanItemId,
         target.eventId,
+        calendarResult.error,
+      );
+    }
+  }
+
+  for (const target of result.calendarEventRestorations) {
+    const calendarColor = mapHexToGoogleCalendarColor(target.categoryColor);
+
+    if (target.eventId) {
+      const calendarResult = await updateGoogleCalendarEvent({
+        eventId: target.eventId,
+        title: target.title,
+        startsAt: target.startsAt,
+        endsAt: target.endsAt,
+        notes: target.notes,
+        calendarColor,
+      });
+
+      if (calendarResult.success) {
+        await markCalendarEventUpdateSucceeded(
+          command.userId,
+          target.dailyPlanItemId,
+          target.eventId,
+          new Date(),
+        );
+      } else {
+        await markCalendarEventUpdateFailed(
+          command.userId,
+          target.dailyPlanItemId,
+          target.eventId,
+          calendarResult.error,
+        );
+      }
+
+      continue;
+    }
+
+    const calendarResult = await createGoogleCalendarEvent({
+      dailyPlanItemId: target.dailyPlanItemId,
+      title: target.title,
+      startsAt: target.startsAt,
+      endsAt: target.endsAt,
+      notes: target.notes,
+      calendarColor,
+    });
+
+    if (calendarResult.success) {
+      await markCalendarSyncSucceeded(
+        command.userId,
+        target.dailyPlanItemId,
+        calendarResult.eventId,
+        new Date(),
+      );
+    } else {
+      await markCalendarSyncFailed(
+        command.userId,
+        target.dailyPlanItemId,
         calendarResult.error,
       );
     }

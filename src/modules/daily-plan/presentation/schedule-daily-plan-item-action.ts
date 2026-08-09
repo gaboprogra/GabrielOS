@@ -2,15 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 
-import type { ActionState } from "@/shared/application/action-state";
 import { getCurrentDevelopmentUserId } from "@/shared/infrastructure/get-current-development-user";
 
 import { scheduleDailyPlanItem } from "../application/schedule-daily-plan-item";
+import {
+  toScheduleConflictActionState,
+  type DailyPlanFormActionState,
+} from "./daily-plan-form-action-state";
 
 export async function scheduleDailyPlanItemAction(
-  _previousState: ActionState,
+  _previousState: DailyPlanFormActionState,
   formData: FormData,
-): Promise<ActionState> {
+): Promise<DailyPlanFormActionState> {
   try {
     const userId = await getCurrentDevelopmentUserId();
 
@@ -24,6 +27,10 @@ export async function scheduleDailyPlanItemAction(
     });
 
     if (!result.success) {
+      if (result.reason === "SCHEDULE_CONFLICT") {
+        return toScheduleConflictActionState(result.conflict);
+      }
+
       return {
         status: "error",
         message: result.error,

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { initialActionState } from "@/shared/application/action-state";
-
+import { initialDailyPlanFormActionState } from "./daily-plan-form-action-state";
 import { rescheduleDailyPlanItemAction } from "./reschedule-daily-plan-item-action";
+import { ScheduleConflictNotice } from "./schedule-conflict-notice";
 
 type RescheduleDailyPlanItemFormProps = {
   item: {
@@ -23,7 +23,7 @@ export function RescheduleDailyPlanItemForm({
 }: RescheduleDailyPlanItemFormProps) {
   const [state, formAction, isPending] = useActionState(
     rescheduleDailyPlanItemAction,
-    initialActionState,
+    initialDailyPlanFormActionState,
   );
 
   return (
@@ -108,7 +108,13 @@ export function RescheduleDailyPlanItemForm({
         />
       </div>
 
-      {state.status === "error" ? (
+      {state.status === "conflict" ? (
+        <ScheduleConflictNotice
+          conflict={state.conflict}
+          startInputId="reschedule-plan-start-time"
+          endInputId="reschedule-plan-end-time"
+        />
+      ) : state.status === "error" ? (
         <p
           aria-live="polite"
           className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700"

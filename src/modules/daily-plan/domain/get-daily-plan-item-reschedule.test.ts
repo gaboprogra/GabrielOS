@@ -4,15 +4,30 @@ import { getDailyPlanItemReschedule } from "./get-daily-plan-item-reschedule";
 
 describe("getDailyPlanItemReschedule", () => {
   it("permite reprogramar una actividad PLANNED", () => {
-    expect(getDailyPlanItemReschedule("PLANNED")).toEqual({ success: true });
+    expect(getDailyPlanItemReschedule("PLANNED").success).toBe(true);
   });
 
-  it.each(["IN_PROGRESS", "COMPLETED", "CANCELLED", "SKIPPED"] as const)(
+  it("permite reprogramar IN_PROGRESS y la devuelve a PLANNED", () => {
+    const result = getDailyPlanItemReschedule("IN_PROGRESS");
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.patch).toEqual({
+        status: "PLANNED",
+        completedAt: null,
+        skippedAt: null,
+        cancelledAt: null,
+      });
+    }
+  });
+
+  it.each(["COMPLETED", "CANCELLED", "SKIPPED"] as const)(
     "rechaza reprogramar una actividad %s",
     (status) => {
       expect(getDailyPlanItemReschedule(status)).toEqual({
         success: false,
-        error: "Solo una actividad programada puede reprogramarse.",
+        error: "Esta actividad ya no puede reprogramarse.",
       });
     },
   );

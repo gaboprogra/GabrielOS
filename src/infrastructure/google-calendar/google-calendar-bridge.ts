@@ -2,6 +2,8 @@ import "server-only";
 
 import type { GoogleCalendarEventColor } from "./google-calendar-event-color";
 
+const POPUP_REMINDER_MINUTES = 5;
+
 type CreateCalendarEventInput = {
   dailyPlanItemId: string;
   title: string;
@@ -86,6 +88,7 @@ export async function createGoogleCalendarEvent(
 
         notes: input.notes,
         calendarColor: input.calendarColor,
+        popupReminderMinutes: POPUP_REMINDER_MINUTES,
       }),
 
       cache: "no-store",
@@ -233,6 +236,7 @@ export async function updateGoogleCalendarEvent(
         endsAt: input.endsAt.toISOString(),
         notes: input.notes,
         calendarColor: input.calendarColor,
+        popupReminderMinutes: POPUP_REMINDER_MINUTES,
       }),
       cache: "no-store",
     });

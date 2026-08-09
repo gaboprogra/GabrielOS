@@ -28,6 +28,26 @@ export function getDailyPlanItemTransition(
   action: DailyPlanItemAction,
   now: Date,
 ): DailyPlanItemTransitionResult {
+  if (action === "RESTORE_TO_PLANNED") {
+    if (currentStatus === "PLANNED") {
+      return {
+        success: false,
+        error: "La actividad ya está planeada.",
+      };
+    }
+
+    return {
+      success: true,
+      patch: {
+        status: "PLANNED",
+        completedAt: null,
+        skippedAt: null,
+        cancelledAt: null,
+      },
+      historyAction: "STATUS_CHANGED",
+    };
+  }
+
   if (action === "START") {
     if (currentStatus !== "PLANNED") {
       return {

@@ -3,8 +3,14 @@ import "server-only";
 import { prisma } from "@/infrastructure/database/prisma";
 
 import { getDailyPlanItemRemoval } from "../domain/get-daily-plan-item-removal";
+import { getCalendarEffectForDailyPlanAction } from "../domain/get-calendar-effect-for-daily-plan-action";
 import { getDailyPlanItemReschedule } from "../domain/get-daily-plan-item-reschedule";
 import { getDailyPlanItemTransition } from "../domain/get-daily-plan-item-transition";
+import { getTaskRestoreAfterPlanItem } from "../domain/get-task-restore-after-plan-item";
+import {
+  findScheduleConflict,
+  type ScheduleOperationFailure,
+} from "../domain/schedule-conflict";
 import type { DailyPlanItemAction } from "../domain/daily-plan-item-status";
 
 type CreateDailyPlanItemData = {
@@ -13,6 +19,7 @@ type CreateDailyPlanItemData = {
   plannedDate: Date;
   startsAt: Date;
   endsAt: Date;
+  latestEnd: Date;
   notes: string | null;
 };
 
@@ -26,10 +33,7 @@ export type CreateDailyPlanItemResult =
       notes: string | null;
       categoryColor: string | null;
     }
-  | {
-      success: false;
-      error: string;
-    };
+  | ScheduleOperationFailure;
 
 type ChangeDailyPlanItemStatusData = {
   userId: string;
@@ -43,6 +47,7 @@ export type ChangeDailyPlanItemStatusResult =
       success: true;
       removed: boolean;
       calendarEventDeletions: CalendarEventDeletionTarget[];
+      calendarEventRestorations: CalendarEventRestorationTarget[];
     }
   | {
       success: false;
@@ -55,12 +60,23 @@ type CalendarEventDeletionTarget = {
   itemRemoved: boolean;
 };
 
+export type CalendarEventRestorationTarget = {
+  dailyPlanItemId: string;
+  eventId: string | null;
+  title: string;
+  startsAt: Date;
+  endsAt: Date;
+  notes: string | null;
+  categoryColor: string | null;
+};
+
 type RescheduleDailyPlanItemData = {
   userId: string;
   dailyPlanItemId: string;
   plannedDate: Date;
   startsAt: Date;
   endsAt: Date;
+  latestEnd: Date;
   notes: string | null;
 };
 
@@ -80,10 +96,7 @@ export type RescheduleDailyPlanItemRepositoryResult =
       plannedDate: Date;
       calendarEventUpdate: CalendarEventUpdateTarget | null;
     }
-  | {
-      success: false;
-      error: string;
-    };
+  | ScheduleOperationFailure;
 
 export async function createDailyPlanItemWithHistory(
   data: CreateDailyPlanItemData,
@@ -124,6 +137,7 @@ export async function createDailyPlanItemWithHistory(
     if (!task) {
       return {
         success: false,
+        reason: "ERROR" as const,
         error: "La tarea no existe o ya no puede programarse.",
       };
     }
@@ -152,6 +166,7 @@ export async function createDailyPlanItemWithHistory(
       if (existingTaskSchedule) {
         return {
           success: false,
+          reason: "ERROR" as const,
           error:
             "Esta tarea de una sola vez ya tiene una programación activa. Reprográmala en lugar de crear otra.",
         };
@@ -162,22 +177,18 @@ export async function createDailyPlanItemWithHistory(
      * Evita solapamientos de horario.
      * Se permite que una actividad termine exactamente cuando comienza otra.
      */
-    const overlappingItem = await transaction.dailyPlanItem.findFirst({
+    const blockingItems = await transaction.dailyPlanItem.findMany({
       where: {
         userId: data.userId,
         plannedDate: data.plannedDate,
         status: {
           in: ["PLANNED", "IN_PROGRESS"],
         },
-        startsAt: {
-          lt: data.endsAt,
-        },
-        endsAt: {
-          gt: data.startsAt,
-        },
       },
       select: {
         id: true,
+        startsAt: true,
+        endsAt: true,
         task: {
           select: {
             title: true,
@@ -186,10 +197,24 @@ export async function createDailyPlanItemWithHistory(
       },
     });
 
-    if (overlappingItem) {
+    const conflict = findScheduleConflict({
+      startsAt: data.startsAt,
+      endsAt: data.endsAt,
+      latestEnd: data.latestEnd,
+      blockingItems: blockingItems.map((item) => ({
+        id: item.id,
+        title: item.task.title,
+        startsAt: item.startsAt,
+        endsAt: item.endsAt,
+      })),
+    });
+
+    if (conflict) {
       return {
         success: false,
-        error: `El horario se cruza con "${overlappingItem.task.title}".`,
+        reason: "SCHEDULE_CONFLICT" as const,
+        error: `El horario se cruza con "${conflict.item.title}".`,
+        conflict,
       };
     }
 
@@ -353,6 +378,8 @@ export async function rescheduleDailyPlanItemWithHistory(
           select: {
             id: true,
             title: true,
+            kind: true,
+            status: true,
             category: {
               select: {
                 color: true,
@@ -366,6 +393,7 @@ export async function rescheduleDailyPlanItemWithHistory(
     if (!item) {
       return {
         success: false,
+        reason: "ERROR",
         error: "La actividad no existe.",
       };
     }
@@ -373,14 +401,18 @@ export async function rescheduleDailyPlanItemWithHistory(
     const reschedule = getDailyPlanItemReschedule(item.status);
 
     if (!reschedule.success) {
-      return reschedule;
+      return {
+        ...reschedule,
+        reason: "ERROR",
+      };
     }
 
     const hasChanges =
       item.plannedDate.getTime() !== data.plannedDate.getTime() ||
       item.startsAt.getTime() !== data.startsAt.getTime() ||
       item.endsAt.getTime() !== data.endsAt.getTime() ||
-      item.notes !== data.notes;
+      item.notes !== data.notes ||
+      item.status === "IN_PROGRESS";
 
     if (!hasChanges) {
       return {
@@ -391,24 +423,18 @@ export async function rescheduleDailyPlanItemWithHistory(
       };
     }
 
-    const overlappingItem = await transaction.dailyPlanItem.findFirst({
+    const blockingItems = await transaction.dailyPlanItem.findMany({
       where: {
-        id: {
-          not: item.id,
-        },
         userId: data.userId,
         plannedDate: data.plannedDate,
         status: {
           in: ["PLANNED", "IN_PROGRESS"],
         },
-        startsAt: {
-          lt: data.endsAt,
-        },
-        endsAt: {
-          gt: data.startsAt,
-        },
       },
       select: {
+        id: true,
+        startsAt: true,
+        endsAt: true,
         task: {
           select: {
             title: true,
@@ -417,10 +443,25 @@ export async function rescheduleDailyPlanItemWithHistory(
       },
     });
 
-    if (overlappingItem) {
+    const conflict = findScheduleConflict({
+      startsAt: data.startsAt,
+      endsAt: data.endsAt,
+      latestEnd: data.latestEnd,
+      blockingItems: blockingItems.map((item) => ({
+        id: item.id,
+        title: item.task.title,
+        startsAt: item.startsAt,
+        endsAt: item.endsAt,
+      })),
+      excludedItemId: item.id,
+    });
+
+    if (conflict) {
       return {
         success: false,
-        error: `El horario se cruza con "${overlappingItem.task.title}".`,
+        reason: "SCHEDULE_CONFLICT" as const,
+        error: `El horario se cruza con "${conflict.item.title}".`,
+        conflict,
       };
     }
 
@@ -435,6 +476,7 @@ export async function rescheduleDailyPlanItemWithHistory(
         notes: item.notes,
       },
       data: {
+        ...reschedule.patch,
         plannedDate: data.plannedDate,
         startsAt: data.startsAt,
         endsAt: data.endsAt,
@@ -456,9 +498,45 @@ export async function rescheduleDailyPlanItemWithHistory(
     if (updateResult.count !== 1) {
       return {
         success: false,
+        reason: "ERROR",
         error:
           "La actividad cambió mientras se procesaba la reprogramación.",
       };
+    }
+
+    if (item.status === "IN_PROGRESS") {
+      const taskRestore = getTaskRestoreAfterPlanItem(
+        item.task.kind,
+        item.task.status,
+      );
+
+      if (taskRestore) {
+        const taskUpdate = await transaction.task.updateMany({
+          where: {
+            id: item.task.id,
+            userId: data.userId,
+            status: taskRestore.fromStatus,
+          },
+          data: taskRestore.patch,
+        });
+
+        if (taskUpdate.count === 1) {
+          await transaction.historyEntry.create({
+            data: {
+              userId: data.userId,
+              entityType: "TASK",
+              entityId: item.task.id,
+              action: "STATUS_CHANGED",
+              details: {
+                fromStatus: taskRestore.fromStatus,
+                toStatus: "PENDING",
+                source: "DAILY_PLAN_ITEM_RESCHEDULED",
+                dailyPlanItemId: item.id,
+              },
+            },
+          });
+        }
+      }
     }
 
     await transaction.historyEntry.create({
@@ -470,6 +548,8 @@ export async function rescheduleDailyPlanItemWithHistory(
         details: {
           taskId: item.task.id,
           taskTitle: item.task.title,
+          fromStatus: item.status,
+          toStatus: "PLANNED",
           before: {
             plannedDate: item.plannedDate.toISOString().slice(0, 10),
             startsAt: item.startsAt.toISOString(),
@@ -520,6 +600,7 @@ export async function changeDailyPlanItemStatusWithHistory(
         plannedDate: true,
         startsAt: true,
         endsAt: true,
+        notes: true,
         googleCalendarEventId: true,
         routineScheduleId: true,
         routineOccurrenceDate: true,
@@ -530,6 +611,11 @@ export async function changeDailyPlanItemStatusWithHistory(
             title: true,
             kind: true,
             status: true,
+            category: {
+              select: {
+                color: true,
+              },
+            },
           },
         },
       },
@@ -628,10 +714,12 @@ export async function changeDailyPlanItemStatusWithHistory(
               },
             ]
           : [],
+        calendarEventRestorations: [],
       };
     }
 
     const calendarEventDeletions: CalendarEventDeletionTarget[] = [];
+    const calendarEventRestorations: CalendarEventRestorationTarget[] = [];
 
     const transition = getDailyPlanItemTransition(
       item.status,
@@ -648,9 +736,11 @@ export async function changeDailyPlanItemStatusWithHistory(
      * El filtro por estado actual evita aplicar dos veces una acción
      * si llegan peticiones concurrentes.
      */
+    const calendarEffect = getCalendarEffectForDailyPlanAction(data.action);
     const shouldDeleteCalendarEvent =
-      (data.action === "COMPLETE" || data.action === "CANCEL") &&
+      calendarEffect === "DELETE" &&
       item.googleCalendarEventId !== null;
+    const shouldRestoreCalendarEvent = calendarEffect === "ENSURE";
 
     if (shouldDeleteCalendarEvent && item.googleCalendarEventId) {
       calendarEventDeletions.push({
@@ -674,6 +764,12 @@ export async function changeDailyPlanItemStatusWithHistory(
               calendarSyncError: null,
             }
           : {}),
+        ...(shouldRestoreCalendarEvent
+          ? {
+              calendarSyncStatus: "PENDING" as const,
+              calendarSyncError: null,
+            }
+          : {}),
       },
     });
 
@@ -682,6 +778,18 @@ export async function changeDailyPlanItemStatusWithHistory(
         success: false,
         error: "La actividad cambió mientras se procesaba la operación.",
       };
+    }
+
+    if (shouldRestoreCalendarEvent) {
+      calendarEventRestorations.push({
+        dailyPlanItemId: item.id,
+        eventId: item.googleCalendarEventId,
+        title: item.task.title,
+        startsAt: item.startsAt,
+        endsAt: item.endsAt,
+        notes: item.notes,
+        categoryColor: item.task.category?.color ?? null,
+      });
     }
 
     /*
@@ -876,6 +984,41 @@ export async function changeDailyPlanItemStatusWithHistory(
           });
         }
       }
+
+      if (data.action === "RESTORE_TO_PLANNED") {
+        const taskRestore = getTaskRestoreAfterPlanItem(
+          item.task.kind,
+          item.task.status,
+        );
+
+        if (taskRestore) {
+          const taskUpdate = await transaction.task.updateMany({
+            where: {
+              id: item.task.id,
+              userId: data.userId,
+              status: taskRestore.fromStatus,
+            },
+            data: taskRestore.patch,
+          });
+
+          if (taskUpdate.count === 1) {
+            await transaction.historyEntry.create({
+              data: {
+                userId: data.userId,
+                entityType: "TASK",
+                entityId: item.task.id,
+                action: "STATUS_CHANGED",
+                details: {
+                  fromStatus: taskRestore.fromStatus,
+                  toStatus: "PENDING",
+                  source: "DAILY_PLAN_ITEM_RESTORED",
+                  dailyPlanItemId: item.id,
+                },
+              },
+            });
+          }
+        }
+      }
     }
 
     /*
@@ -905,6 +1048,7 @@ export async function changeDailyPlanItemStatusWithHistory(
       success: true,
       removed: false,
       calendarEventDeletions,
+      calendarEventRestorations,
     };
   });
 }

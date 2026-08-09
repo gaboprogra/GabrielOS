@@ -92,6 +92,33 @@ Después de obtener el evento en las ramas `create` y `update`, llamar:
 applyCalendarColor(event, payload.calendarColor);
 ```
 
+GabrielOS también envía `popupReminderMinutes: 5` en `create` y `update`. Para
+no depender de los recordatorios predeterminados ni acumular recordatorios al
+actualizar repetidamente, el Apps Script debe añadir:
+
+```javascript
+function applyGabrielOsPopupReminder(event, popupReminderMinutes) {
+  if (Number(popupReminderMinutes) !== 5) {
+    throw new Error("GabrielOS requiere un recordatorio popup de 5 minutos.");
+  }
+
+  event.removeAllReminders();
+  event.addPopupReminder(5);
+}
+```
+
+Después de crear el evento y después de recuperar/actualizar el evento existente
+en `update`, ejecutar:
+
+```javascript
+applyGabrielOsPopupReminder(event, payload.popupReminderMinutes);
+```
+
+`removeAllReminders()` garantiza que sólo quede el popup explícito de cinco
+minutos, incluso después de varias actualizaciones. Tras modificar el proyecto
+de Apps Script hay que crear una nueva versión del Web App; GabrielOS no cambia
+el deployment ni sus secretos automáticamente.
+
 En `update` debe usarse el evento recuperado por `payload.eventId`; no debe
 crearse otro. La llamada al Apps Script siempre ocurre después del commit de la
 base de datos. Si falla, la ocurrencia permanece y queda con

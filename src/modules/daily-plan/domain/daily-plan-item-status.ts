@@ -14,6 +14,7 @@ export const DAILY_PLAN_ITEM_ACTIONS = [
   "SKIP",
   "CANCEL",
   "REMOVE",
+  "RESTORE_TO_PLANNED",
 ] as const;
 
 export type DailyPlanItemAction = (typeof DAILY_PLAN_ITEM_ACTIONS)[number];

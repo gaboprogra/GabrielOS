@@ -83,9 +83,16 @@ Archivar una tarea no borra sus datos ni historial en GabrielOS. Para cada
 - Si existe un evento externo, se cancela o elimina mediante el adaptador y se
   conserva localmente la trazabilidad de esa operación.
 
-Los eventos de elementos ya completados se conservan salvo una decisión
-funcional posterior. Una falla al retirar el evento no revierte el archivado;
-queda como sincronización pendiente o fallida.
+`COMPLETED`, `SKIPPED`, `CANCELLED` y `REMOVE` retiran el evento después de
+confirmar el cambio local. Una falla al retirar el evento no revierte el estado
+de GabrielOS; conserva el identificador y queda como sincronización fallida.
+Volver una ocurrencia a `PLANNED` asegura nuevamente su representación externa:
+actualiza el mismo identificador si todavía existe o crea un evento sólo cuando
+el vínculo ya fue eliminado.
+
+Las acciones `create` y `update` configuran explícitamente un único recordatorio
+popup cinco minutos antes. El bridge elimina recordatorios anteriores antes de
+agregarlo, por lo que no depende de valores predeterminados ni acumula avisos.
 
 ## Errores y reintentos
 

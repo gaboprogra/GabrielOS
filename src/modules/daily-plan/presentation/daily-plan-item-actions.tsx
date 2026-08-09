@@ -57,6 +57,11 @@ function getAvailableActions(status: DailyPlanItemStatus): ActionDefinition[] {
   if (status === "IN_PROGRESS") {
     return [
       {
+        action: "RESTORE_TO_PLANNED",
+        label: "Volver a planeada",
+        className: "ui-action-secondary",
+      },
+      {
         action: "COMPLETE",
         label: "Completar",
         className: "ui-action-success",
@@ -79,8 +84,23 @@ function getAvailableActions(status: DailyPlanItemStatus): ActionDefinition[] {
     ];
   }
 
+  if (status === "COMPLETED") {
+    return [
+      {
+        action: "RESTORE_TO_PLANNED",
+        label: "Volver a planeada",
+        className: "ui-action-secondary",
+      },
+    ];
+  }
+
   if (status === "SKIPPED" || status === "CANCELLED") {
     return [
+      {
+        action: "RESTORE_TO_PLANNED",
+        label: "Volver a planeada",
+        className: "ui-action-secondary",
+      },
       {
         action: "REMOVE",
         label: "Quitar del plan",
@@ -110,7 +130,7 @@ export function DailyPlanItemActions({
   return (
     <div className="mt-4 border-t border-slate-100 pt-4">
       <div className="flex flex-wrap gap-2">
-        {status === "PLANNED" ? (
+        {status === "PLANNED" || status === "IN_PROGRESS" ? (
           <Link
             href={`/daily-plan/${dailyPlanItemId}/edit`}
             className="ui-action-primary rounded-lg px-3 py-2 text-sm font-medium transition"
